@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "fat32.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c"
+    }
+}
