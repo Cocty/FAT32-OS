@@ -37,7 +37,7 @@ int my_dir(const ARGP arg,FileSystemInfop fileSystemInfop){
     
 	u32 pathNum=fileSystemInfop->pathNum;
 	u32 cut;
-//	while(TRUE){
+
     int attr=0;
     int file=0,filesize=0;
 	do{

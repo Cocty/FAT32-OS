@@ -75,7 +75,7 @@ void BS_BPSset(BS_BPBp bs_bpb,int size,int hiden){
     bs_bpb->BPB_FATSz32=x+(8-x%8);
     bs_bpb->BPB_ExtFlags=0;
     bs_bpb->BPB_FSVer=0;
-    bs_bpb->BPB_RootClis=2;
+    bs_bpb->BPB_RootClus=2;
     bs_bpb->BPB_FSInfo=1;
     bs_bpb->BPB_BkBootSec=6;
     memset(bs_bpb->BPB_Reserved,0,sizeof(bs_bpb->BPB_Reserved));
@@ -95,9 +95,8 @@ int my_format(const ARGP arg){
 功能         格式化文件系统\n\
 语法格式     format size [name [namefile]]\n\
 szie        磁盘大小 单位MB\n\
-name        卷标名  默认 mfs\n\
+fatName        卷标名  默认 mfs\n\
 namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n";
-    DEBUG("%d",sizeof(BS_BPB));
     BLOCK4K block4k;
     FILE *fp=NULL;
     switch(arg->len){
@@ -120,15 +119,17 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     }
    
     
-    DEBUG("%s %d",arg->argv[0],ctoi(arg->argv[0]));
     int size=ctoi(arg->argv[0]);
+    DEBUG("磁盘容量大小为%dMB\n",size);
+
     if(size<MIN||size>MAX){
         strcpy(error.msg,"磁盘容量量错误\n\x00");
         printf("磁盘容量量错误\n");
         return ERROR;
     }
     int cut=size*K*K/SPCSIZE;
-    DEBUG("%d %d\n",sizeof(BLOCK),sizeof(BLOCK4K));
+
+
     fp=fopen(fileName,"wb");
     if(fp==NULL){
         strcpy(error.msg,"文件打开错误\n\x00");
@@ -151,24 +152,26 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     MBR mbr;
     MBRset(&mbr,size*K*K);
     do_write_block(fp,(BLOCK*)&mbr,0,0);
+    DEBUG("MBR 分区的起始扇区号为%d，MBR分区的总扇区数 %d\n",mbr.mbr_in[0].start_sec,mbr.mbr_in[0].all);
 
     //fatBPB
     BS_BPB bs_pbp;
     BS_BPSset(&bs_pbp,size*K*K-mbr.mbr_in[0].start_sec*BLOCKSIZE,mbr.mbr_in[0].start_sec);
-    DEBUG("fat表占用的扇区数为%d",bs_pbp.BPB_FATSz32);
+    DEBUG("fat表占用的扇区数为%d\n",bs_pbp.BPB_FATSz32);
     do_write_block(fp,(BLOCK*)&bs_pbp,mbr.mbr_in[0].start_sec*BLOCKSIZE/SPCSIZE,(mbr.mbr_in[0].start_sec*BLOCKSIZE%SPCSIZE)/BLOCKSIZE);
     
     //初始化根目录
-    int start=bs_pbp.BPB_FATSz32*bs_pbp.BPB_NumFATs+bs_pbp.BPB_RsvdSecCnt+mbr.mbr_in[0].start_sec+(bs_pbp.BPB_RootClis-2)*bs_pbp.BPB_SecPerClus;
+    int start=bs_pbp.BPB_FATSz32*bs_pbp.BPB_NumFATs+bs_pbp.BPB_RsvdSecCnt+mbr.mbr_in[0].start_sec+(bs_pbp.BPB_RootClus-2)*bs_pbp.BPB_SecPerClus;
     DEBUG("开始扇区 %d\n",start); 
 
-    BLOCK block;
+    BLOCK4K block;
     FAT_DSp fatdsp=(FAT_DSp)&block;
     memset(&block, 0, sizeof(block));
     memcpy(fatdsp->name,fatName,8);
     memcpy(fatdsp->named,"   ",3);
     fatdsp->DIR_Attr=ATTR_VOLUME_ID;
-    do_write_block(fp,&block,start/8,start%8);
+    do_write_block4k(fp,&block,start/8);
+    DEBUG("根目录大小 %d\n",sizeof(block));
 
     FSInfo fsi;
     FSInfoset(&fsi);
@@ -182,7 +185,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     DEBUG("fat表1和fat表2的位置：%d %d\n",str_fat1,str_fat2);
     FAT fat;
     fat.fat[0]=0x0ffffff8;
-    for(u32 i=1;i<=bs_pbp.BPB_RootClis;i++){
+    for(u32 i=1;i<=bs_pbp.BPB_RootClus;i++){
         fat.fat[i]=FAT_END;
     }
     do_write_block(fp,(BLOCK*)&fat,str_fat1/8,str_fat1%8);

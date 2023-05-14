@@ -43,9 +43,7 @@ name       创建文件夹的名字\n\
                 printf(helpstr);
                 return SUCCESS;
             }else{
-                // memset(name,' ',ARGLEN);
                 strcpy(name,arg->argv[0]);
-                // name[11]='\0';
                 if(nameCheck(name)==ERROR){
                     strcpy(error.msg,"文件名过长或存在非法字符\n\x00");
                     printf("文件名过长或存在非法字符\n");
@@ -61,40 +59,38 @@ name       创建文件夹的名字\n\
             DEBUG("文件名空\n");
             return SUCCESS;
         default:
-        error:;
             strcpy(error.msg,"参数数量错误\n\x00");
             printf("参数数量错误\n");
             return ERROR;
     }
 
-    u32 pathNum=fileSystemInfop->pathNum;
+    u32 pathNum=fileSystemInfop->pathNum; //当前的逻辑簇号
+    DEBUG("当前路径的的逻辑簇号为%d\n",pathNum);
+
     u32 cut;
     while(TRUE){
         //检查这一页的目录项
         do_read_block4k(fileSystemInfop->fp,(BLOCK4K*)&fat_ds,L2R(fileSystemInfop,pathNum));
         for(cut=0;cut<SPCSIZE/32;cut++){
-            char lin[12];
-            my_strcpy(lin,fat_ds.fat[cut].name,11);
-            lin[11]='\0';
-            if(
-                // fat_ds.fat[cut].name[0]=='\xE5' 
-            // || 
-            fat_ds.fat[cut].name[0]=='\x00'){
+            char temp[12];
+            my_strcpy(temp,fat_ds.fat[cut].name,11);
+            temp[11]='\0';
+            if(fat_ds.fat[cut].name[0]=='\x00'){ //没有分配
                 break;
             }else if((fat_ds.fat[cut].DIR_Attr) && 
-                            strcmp(name,lin)==0 ){
+                            strcmp(name,temp)==0 ){
                 strcpy(error.msg,"文件已存在\n\x00");
                 printf("文件已存在\n");
                 return ERROR;
             }
         }
-        //取得下一个目录项
+        //簇满，取得下一个簇号
         if(cut==SPCSIZE/32){
-            u32 lin=pathNum;
+            u32 temp=pathNum;
             pathNum=getNext(fileSystemInfop,pathNum);
             if(pathNum==FAT_END){
                 //全都没有分配一个
-                pathNum=newfree(fileSystemInfop,lin);
+                pathNum=newfree(fileSystemInfop,temp);
                 if(pathNum==FAT_FREE){
                     strcpy(error.msg,"磁盘空间不足\n\x00");
                     printf("磁盘空间不足\n");
@@ -105,6 +101,8 @@ name       创建文件夹的名字\n\
             //找到了空的
             //取得. 与..
             u32 pathnumd=newfree(fileSystemInfop,0);
+            DEBUG("新创建的路径逻辑簇号为%d\n",pathnumd);
+
             FAT_DS_BLOCK4K fat_ds_d;
             memset(&fat_ds_d,0,SPCSIZE);
             my_strcpy(fat_ds_d.fat[0].name,DIR_d,11);

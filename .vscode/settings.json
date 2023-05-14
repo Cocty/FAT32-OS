@@ -4,6 +4,16 @@
         "stdio.h": "c",
         "stdlib.h": "c",
         "string.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "typeinfo": "c",
+        "cctype": "c",
+        "climits": "c",
+        "cmath": "c",
+        "cstdarg": "c",
+        "cstdint": "c",
+        "cstdio": "c",
+        "cstdlib": "c",
+        "type_traits": "c",
+        "*.tcc": "c"
     }
 }

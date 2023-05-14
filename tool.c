@@ -110,7 +110,7 @@ char* my_strcpy(char *to,const char*from,int size ){
 
 // 取得命令参数
 int getargv(ARGP argp){
-    char cmd[ARGLEN*10];
+    char cmd[(ARGLEN+1)*10];
     if(gets(cmd)==NULL){
         argp->len=0;
         return SUCCESS;
@@ -119,10 +119,10 @@ int getargv(ARGP argp){
     int len=0;
     int flag=0;
     for(u32 i=0;i<strlen(cmd);i++){
-        if(len>=ARGLEN){
+        if(len>ARGLEN){
             return ERROR;
         }
-        if(num>=ARGNUM){
+        if(num>ARGNUM){
             return ERROR;
         }
         if(cmd[i]==' ' ||cmd[i]=='\t' ||cmd[i]=='\r'){
@@ -134,7 +134,7 @@ int getargv(ARGP argp){
             len=0;
         }
         (argp->argv)[num-1][len]=cmd[i];
-        (argp->argv)[num-1][len+1]=0;
+        (argp->argv)[num-1][len+1]='\0';
         len++;
         flag=1;
     }

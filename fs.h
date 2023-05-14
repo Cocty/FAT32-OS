@@ -93,8 +93,8 @@ typedef struct __FileSystemInfo{
     FILE* fp;       
     /* 根目录扇区号 */
     u32 rootNum;
-    /* 分区表位置 簇 */
-    u32 FAT[8];
+    /* FAT表位置 扇区 */
+    u32 FAT[2];
     /* 当前路径  定义为 / 防止转义爆炸  */
     u8 path[ARGLEN];
     /* 当前路径簇号 逻辑的 */
@@ -106,7 +106,7 @@ typedef struct __FileSystemInfo{
     /* 区扇区数 */
     u32 MBR_size;   
 
-   /*  fat一扇区BPB、BS部分 */
+   /*  fat第0扇区DBR部分 */
    /* 每扇区字节数 通常为512 */
     u16 BPB_BytsPerSec; 
     /* 每簇扇区数  通常为8 */
@@ -121,9 +121,9 @@ typedef struct __FileSystemInfo{
     u32 BPB_TotSec32;   
     /* fat表所占扇区数 */
     u32 BPB_FATSz32;    
-    /* 根本目录所在第一扇区数  逻辑*/
-    u32 BPB_RootClis;   
-    /* 保留区引导扇所占扇区数 通常为6 */
+    /* 根目录所在第一扇区数  逻辑的, 一般为2*/
+    u32 BPB_RootClus;   
+    /* 引导扇区的备份扇区号 通常为6 */
     u16 BPB_BkBootSec;
     //打开的文件信息
     Opendfile Opendf[OPENFILESIZE];
@@ -195,7 +195,7 @@ typedef struct __BS_BPB{
     u16 BPB_ExtFlags;           // 文件系统标志
     u16 BPB_FSVer;              // 文件系统版本号
     /* 根目录簇号 */
-    u32 BPB_RootClis;           // 根目录的簇号
+    u32 BPB_RootClus;           // 根目录的簇号
     u16 BPB_FSInfo;             // FSINFO扇区的扇区号
     u16 BPB_BkBootSec;          // 备份引导扇区的扇区号
     u8 BPB_Reserved[12];        // 保留字节
@@ -229,12 +229,12 @@ typedef struct __FAT4K{
     u32 fat[SPCSIZE/4];
 }FAT4K,FAT4Kp;
 
-/* fat目录项512 */
+// 16个目录项 
 typedef struct __FAT_DS_BLOCK{
     FAT_DS fat[BLOCKSIZE/sizeof(FAT_DS)];
 }FAT_DS_BLOCK,*FAT_DS_BLOCKp;
 
-/* fat目录项4K */
+// 128个目录项
 typedef struct __FAT_DS_BLOCK4K{
     FAT_DS fat[SPCSIZE/sizeof(FAT_DS)];
 }FAT_DS_BLOCK4K,*FAT_DS_BLOCK4Kp;
