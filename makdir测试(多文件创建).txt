@@ -1,3 +1,4 @@
+format 512
 load
 mkdir R>L8@B8X6
 mkdir `[=K<UW3
@@ -9999,3 +10000,4 @@ mkdir @x:jU]>
 mkdir OB2]R
 mkdir 9zyzMp_=
 mkdir W
+exit

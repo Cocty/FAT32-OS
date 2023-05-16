@@ -17,7 +17,6 @@ int main(){
         }else{
             printf("> ");
         }
-
         scanf("%s",cmd);
         if(getargv(&argv)==ERROR){
             printf(WXML);
@@ -48,15 +47,15 @@ int main(){
         }else if(strcmp(cmd,"read")==0){
             my_read(&argv,&fileSysInfo);
         }else if(strcmp(cmd,"exit")==0){
-            if(my_exitsys(&argv,&fileSysInfo)==SUCCESS){
+            flag=my_exitsys(&argv,&fileSysInfo);
+            if(flag==SUCCESS){
                 break;
             }
         }else if(strcmp(cmd,"help")==0){
             my_help();
         }else{
             printf(WXML);
-        } 
-        
+        }
     }
 
     return 0;

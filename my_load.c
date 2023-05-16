@@ -51,7 +51,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     //MBR部分
     do_read_block(fp,(BLOCK*)&mbr,0,0);
     fileSystemInfop->MBR_size=mbr.mbr_in[0].all;
-    fileSystemInfop->MBR_start=mbr.mbr_in[0].start_sec;
+    fileSystemInfop->MBR_start=mbr.mbr_in[0].strart_chan;
 
 
     do_read_block(fp,(BLOCK*)&bpb,fileSystemInfop->MBR_start/8,fileSystemInfop->MBR_start%8);
@@ -62,25 +62,20 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     fileSystemInfop->BPB_HiddSec=bpb.BPB_HiddSec;
     fileSystemInfop->BPB_TotSec32=bpb.BPB_TotSec32;
     fileSystemInfop->BPB_FATSz32=bpb.BPB_FATSz32;
-    fileSystemInfop->BPB_RootClus=bpb.BPB_RootClus;
+    fileSystemInfop->BPB_RootClis=bpb.BPB_RootClis;
     fileSystemInfop->BPB_BkBootSec=bpb.BPB_BkBootSec;
 
-
+// bs_pbp.BPB_FATSz32*bs_pbp.BPB_NumFATs+bs_pbp.BPB_RsvdSecCnt+mbr.mbr_in[0].strart_chan+(bs_pbp.BPB_RootClis-2)*bs_pbp.BPB_SecPerClus;
     fileSystemInfop->rootNum=fileSystemInfop->MBR_start+
                     fileSystemInfop->BPB_RsvdSecCnt+
                     fileSystemInfop->BPB_FATSz32*fileSystemInfop->BPB_NumFATs+
-                    (fileSystemInfop->BPB_RootClus-2)*fileSystemInfop->BPB_SecPerClus; // 根目录起始扇区
-
-    DEBUG("根目录的起始扇区为%d\n",fileSystemInfop->rootNum);
-
+                    (fileSystemInfop->BPB_RootClis-2)*fileSystemInfop->BPB_SecPerClus;
     u32 start=fileSystemInfop->MBR_start+
-                    fileSystemInfop->BPB_RsvdSecCnt; //FAT表起始扇区
-
+                    fileSystemInfop->BPB_RsvdSecCnt;
     for(u32 i=0;i<fileSystemInfop->BPB_NumFATs;i++){
         fileSystemInfop->FAT[i]=start+i*fileSystemInfop->BPB_FATSz32;
     }
-
-    fileSystemInfop->pathNum=fileSystemInfop->BPB_RootClus;
+    fileSystemInfop->pathNum=fileSystemInfop->BPB_RootClis;
     /* 初始化打开文件目录 */
     for(int i=0;i<OPENFILESIZE;i++){
         fileSystemInfop->Opendf[i].flag=FALSE;
@@ -93,7 +88,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     }
 
     DEBUG("%s 加载成功!\n",fileSystemInfop->fileName);
-    DEBUG("根目录扇区号 %d\n",fileSystemInfop->rootNum);
-    DEBUG("FAT表1和FAT表2 的扇区号为 %d %d\n",fileSystemInfop->FAT[0],fileSystemInfop->FAT[1]);
+    DEBUG("根目录簇号 %d\n",fileSystemInfop->rootNum);
+    DEBUG("簇 %d %d\n",fileSystemInfop->FAT[0],fileSystemInfop->FAT[1]);
     return SUCCESS;
 }
