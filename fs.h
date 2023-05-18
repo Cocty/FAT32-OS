@@ -48,7 +48,7 @@ typedef unsigned short u16;
 typedef unsigned char u8;
 
 
-// #define __DEBUG__
+#define __DEBUG__
 #ifdef __DEBUG__
     #define DEBUG printf
 #endif
