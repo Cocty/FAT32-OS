@@ -69,9 +69,6 @@ int do_read_block(FILE *fp, BLOCK *block, int offset, int num)
 
 u32 L2R(FileSystemInfop fsip, u32 num)
 {
-    // DEBUG("lj %u->%u\n",num,(fsip->MBR_start+
-    // fsip->BPB_RsvdSecCnt+
-    // fsip->BPB_FATSz32*fsip->BPB_NumFATs)/fsip->BPB_SecPerClus+num-2);
     return (fsip->MBR_start + fsip->BPB_RsvdSecCnt + fsip->BPB_FATSz32 * fsip->BPB_NumFATs) / fsip->BPB_SecPerClus + num - 2;
 }
 
@@ -94,10 +91,10 @@ int newfree(FileSystemInfop fsip, u32 num)
     FAT fat;
     u32 cuNum = num / (512 / 4);
     u32 index = num % (512 / 4);
-    for (u32 i = 0; i < fsip->BPB_FATSz32; i++)
+    for (u32 i = 0; i < fsip->BPB_FATSz32; i++) //遍历fat表
     {
         do_read_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[0] + i) / 8, (fsip->FAT[0] + i) % 8);
-        for (int j = 0; j < 512 / 4; j++)
+        for (int j = 0; j < 512 / 4; j++) // 遍历FAT一个扇区的每个表项
         {
             if (fat.fat[j] == FAT_FREE)
             {
@@ -106,7 +103,7 @@ int newfree(FileSystemInfop fsip, u32 num)
                 {
                     do_write_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[k] + i) / 8, (fsip->FAT[k] + i) % 8);
                 }
-                if (num != 0)
+                if (num != 0) //当num不为0时，连接簇号为num的下一个簇为i*(512/4)+j
                 {
                     do_read_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[0] + cuNum) / 8, (fsip->FAT[0] + cuNum) % 8);
                     fat.fat[index] = i * (512 / 4) + j;
@@ -116,7 +113,7 @@ int newfree(FileSystemInfop fsip, u32 num)
                     }
                 }
                 BLOCK4K block4k;
-                memset(&block4k, 0, SPCSIZE);
+                memset(&block4k, 0, SPCSIZE); //当num为0时，只分配不连接
                 do_write_block4k(fsip->fp, &block4k, L2R(fsip, i * (512 / 4) + j));
                 DEBUG("new link %d->%d %d %d\n", num, i * (512 / 4) + j, i, j);
                 return i * (512 / 4) + j;
@@ -125,6 +122,7 @@ int newfree(FileSystemInfop fsip, u32 num)
     }
     return 0;
 }
+
 int delfree(FileSystemInfop fsip, u32 num)
 {
     FAT fat;
@@ -257,7 +255,6 @@ int nameCheckChange(const char name[ARGLEN], char name38[12])
         return SUCCESS;
     }
     return ERROR;
-    ;
 }
 
 int debug_in(char *format, ...)
