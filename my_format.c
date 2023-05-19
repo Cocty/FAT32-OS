@@ -14,12 +14,12 @@
 // 单位字节
 void vhdset(HD_FTRp vhd, u64 size)
 {
-    strcpy(vhd->cookie, "conectix");
+    strncpy(vhd->cookie, "conectix", 8);
     vhd->features = BigtoLittle32(0x00000002);
     vhd->ff_version = BigtoLittle32(0x00010000);
     vhd->data_offset = BigtoLittle64(0xFFFFFFFFFFFFFFFF);
     vhd->timestamp = 0x00000000;
-    strcpy(vhd->crtr_app, "myfs");
+    strncpy(vhd->crtr_app, "myfs", 4);
     vhd->crtr_ver = BigtoLittle32(0x00060001);
     // strcpy((char*)vhd->crtr_os,"Wi2k");
     vhd->crtr_os = BigtoLittle32(0x5769326b);
@@ -42,7 +42,6 @@ void vhdset(HD_FTRp vhd, u64 size)
 // size为字节数
 void MBRset(MBRp mbr, int size)
 {
-    mbr->sign = 0x12345678;
     (mbr->mbr_in[0]).flag = 0;
     (mbr->mbr_in[0]).FSflag = 0x0b;
     mbr->mbr_in[0].strart_chan = 0x00000008;
@@ -62,8 +61,8 @@ void FSInfoset(FSInfop fsi)
 // size 为字节数
 void BS_BPSset(BS_BPBp bs_bpb, int size, int hiden)
 {
-    my_strcpy(bs_bpb->BS_jmpBoot, "\xEB\x58\x90", sizeof(bs_bpb->BS_jmpBoot));
-    my_strcpy(bs_bpb->BS_OEMName, "MSDOS5.0", sizeof(bs_bpb->BS_OEMName));
+    strncpy(bs_bpb->BS_jmpBoot, "\xEB\x58\x90", sizeof(bs_bpb->BS_jmpBoot));
+    strncpy(bs_bpb->BS_OEMName, "MSDOS5.0", sizeof(bs_bpb->BS_OEMName));
     bs_bpb->BPB_BytsPerSec = 512;
     bs_bpb->BPB_SecPerClus = 8; //
     bs_bpb->BPB_RsvdSecCnt = 32;
@@ -89,8 +88,8 @@ void BS_BPSset(BS_BPBp bs_bpb, int size, int hiden)
     bs_bpb->BS_Reserved1 = 0;
     bs_bpb->BS_BootSig = 0x29;
     // char BS_VolID[4];
-    my_strcpy(bs_bpb->BS_VolLab, "NO NAME    ", 11);
-    my_strcpy(bs_bpb->BS_FilSysType, "FAT32    ", 8);
+    strncpy(bs_bpb->BS_VolLab, "NO NAME    ", 11);
+    strncpy(bs_bpb->BS_FilSysType, "FAT32    ", 8);
     bs_bpb->end = 0xAA55;
 }
 
@@ -111,9 +110,9 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     switch (arg->len)
     {
     case 3:
-        my_strcpy(fileName, arg->argv[2], ARGLEN);
+        strncpy(fileName, arg->argv[2], ARGLEN);
     case 2:
-        my_strcpy(fatName, arg->argv[1], 8);
+        strncpy(fatName, arg->argv[1], 8);
     case 1:
         if (strcmp(arg->argv[0], "/?") == 0 && arg->len == 1)
         {
@@ -198,8 +197,8 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     FAT_DSp fatdsp = (FAT_DSp)&block;
     do_read_block(fp, &block, offset, num);
     memset(fatdsp, 0, sizeof(FAT_DS));
-    my_strcpy(fatdsp->name, fatName, 8);
-    my_strcpy(fatdsp->named, "   ", 3);
+    strncpy(fatdsp->name, fatName, 8);
+    strncpy(fatdsp->named, "   ", 3);
     fatdsp->DIR_Attr = ATTR_VOLUME_ID;
     do_write_block(fp, &block, offset, num);
 

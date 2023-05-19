@@ -61,7 +61,7 @@ name       创建文件的名字\n\
         for (cut = 0; cut < SPCSIZE / 32; cut++)                                                 //遍历该簇下的每个目录项
         {
             char lin[12];
-            my_strcpy(lin, fat_ds.fat[cut].name, 11);
+            strncpy(lin, fat_ds.fat[cut].name, 11);
             lin[11] = '\0';
             if (fat_ds.fat[cut].name[0] == '\x00') //说明该目录项空闲还没有分配
             {
@@ -95,7 +95,7 @@ name       创建文件的名字\n\
         {
             //找到了空的，分配一个目录项
             memset(&fat_ds.fat[cut], 0, sizeof(FAT_DS));
-            my_strcpy(fat_ds.fat[cut].name, name, 11);
+            strncpy(fat_ds.fat[cut].name, name, 11);
             fat_ds.fat[cut].DIR_Attr = ATTR_ARCHIVE;
 
             //写入新建文件

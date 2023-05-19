@@ -60,7 +60,7 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 		for (cut = 0; cut < SPCSIZE / 32; cut++)												 //遍历目录项
 		{
 			char lin[12];
-			my_strcpy(lin, fat_ds.fat[cut].name, 11);
+			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
 
 			if (strcmp(lin, name) == 0)
@@ -105,7 +105,7 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
-	} while (pathNum != FAT_END);
+	} while (pathNum != FAT_END && pathNum != 0);
 	printf("未找到目标文件，打开失败!\n");
 	return SUCCESS;
 }

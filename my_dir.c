@@ -51,7 +51,7 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 		for (cut = 0; cut < SPCSIZE / 32; cut++)												 // 遍历当前簇的目录项
 		{
 			char lin[12];
-			my_strcpy(lin, fat_ds.fat[cut].name, 11);
+			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
 			if (fat_ds.fat[cut].name[0] == '\xe5')
 			{

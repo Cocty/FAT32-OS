@@ -173,11 +173,9 @@ typedef struct __MBR_in
 
 typedef struct __MBR
 {
-    char recoverd[512 - 66 - 6];
-    u32 sign;
-    char recoved[2];
+    char recoverd[446];
     MBR_in mbr_in[4];
-    u32 end;
+    u16 end;
 } MBR, *MBRp;
 
 typedef struct __BS_BPB

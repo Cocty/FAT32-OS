@@ -131,20 +131,11 @@ int delfree(FileSystemInfop fsip, u32 num)
     do_read_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[0] + cuNum) / 8, (fsip->FAT[0] + cuNum) % 8);
     u32 ret = fat.fat[index];
     fat.fat[index] = FAT_FREE;
-    for (int i = 0; i < fsip->BPB_NumFATs; i++)
+    for (int i = 0; i < fsip->BPB_NumFATs; i++) //写回到fat表
     {
         do_write_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[i] + cuNum) / 8, (fsip->FAT[i] + cuNum) % 8);
     }
     return ret;
-}
-
-char *my_strcpy(char *to, const char *from, int size)
-{
-    for (int i = 0; i < size; i++)
-    {
-        to[i] = from[i];
-    }
-    return to;
 }
 
 // 取得命令参数
