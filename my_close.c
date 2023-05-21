@@ -19,9 +19,8 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 		printf("未指定文件系统\n");
 		return ERROR;
 	}
-	switch (arg->len)
+	if (arg->len == 1)
 	{
-	case 1:
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
 			printf(helpstr);
@@ -41,12 +40,15 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 			}
 			name[11] = '\0';
 			DEBUG("|%s|\n", name);
-			break;
 		}
-	case 0:
-		break;
-	default:
-	error:;
+	}
+	else if (arg->len == 0)
+	{
+		printf("文件名空\n");
+		return ERROR;
+	}
+	else
+	{
 		strcpy(error.msg, "参数数量错误\n\x00");
 		printf("参数数量错误\n");
 		return ERROR;

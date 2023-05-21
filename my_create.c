@@ -19,9 +19,8 @@ name       创建文件的名字\n\
         printf("未指定文件系统\n");
         return ERROR;
     }
-    switch (arg->len)
+    if (arg->len == 1)
     {
-    case 1:
         if (strcmp(arg->argv[0], "/?") == 0)
         {
             printf(helpstr);
@@ -41,12 +40,14 @@ name       创建文件的名字\n\
             }
             name[11] = '\0';
         }
-        break;
-    case 0:
+    }
+    else if (arg->len == 0)
+    {
         DEBUG("文件名空\n");
-        return SUCCESS;
-    default:
-    error:;
+        return ERROR;
+    }
+    else
+    {
         strcpy(error.msg, "参数数量错误\n\x00");
         printf("参数数量错误\n");
         return ERROR;

@@ -42,9 +42,8 @@ name       创建文件夹的名字\n\
         printf("未指定文件系统\n");
         return ERROR;
     }
-    switch (arg->len)
+    if (arg->len == 1)
     {
-    case 1:
         if (strcmp(arg->argv[0], "/?") == 0)
         {
             printf(helpstr);
@@ -52,9 +51,7 @@ name       创建文件夹的名字\n\
         }
         else
         {
-            // memset(name,' ',ARGLEN);
             strcpy(name, arg->argv[0]);
-            // name[11]='\0';
             if (nameCheck(name) == ERROR)
             {
                 strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
@@ -67,12 +64,14 @@ name       创建文件夹的名字\n\
             }
             name[11] = '\0';
         }
-        break;
-    case 0:
+    }
+    else if (arg->len == 0)
+    {
         DEBUG("文件名空\n");
-        return SUCCESS;
-    default:
-    error:;
+        return ERROR;
+    }
+    else
+    {
         strcpy(error.msg, "参数数量错误\n\x00");
         printf("参数数量错误\n");
         return ERROR;
@@ -90,14 +89,11 @@ name       创建文件夹的名字\n\
             char lin[12];
             strncpy(lin, fat_ds.fat[cut].name, 11);
             lin[11] = '\0';
-            if (
-                // fat_ds.fat[cut].name[0]=='\xE5'
-                // ||
-                fat_ds.fat[cut].name[0] == '\x00')
+            if (fat_ds.fat[cut].name[0] == '\x00')
             {
                 break;
             }
-            else if ((fat_ds.fat[cut].DIR_Attr) &&
+            else if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) &&
                      strcmp(name, lin) == 0)
             {
                 strcpy(error.msg, "文件已存在\n\x00");

@@ -19,9 +19,8 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 		printf("未指定文件系统\n");
 		return ERROR;
 	}
-	switch (arg->len)
+	if (arg->len == 1)
 	{
-	case 1:
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
 			printf(helpstr);
@@ -29,15 +28,10 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 		}
 		else
 		{
-			goto error;
+			strcpy(error.msg, "参数数量错误\n\x00");
+			printf("参数数量错误\n");
+			return ERROR;
 		}
-	case 0:
-		break;
-	default:
-	error:;
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
 	}
 
 	u32 pathNum = fileSystemInfop->pathNum;

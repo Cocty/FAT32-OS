@@ -57,9 +57,8 @@ name	  想要删除的文件夹名\n";
 		return ERROR;
 	}
 
-	switch (arg->len)
+	if (arg->len == 1)
 	{
-	case 1:
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
 			printf(helpstr);
@@ -78,22 +77,26 @@ name	  想要删除的文件夹名\n";
 				delname[i] = toupper(delname[i]);
 			}
 			delname[11] = '\0';
-			// DEBUG("|%s|\n", delname);
+
 			if (strcmp(arg->argv[0], "..") == 0 || strcmp(arg->argv[0], ".") == 0)
 			{
 				printf("文件夹不存在\n");
 				return SUCCESS;
 			}
-			break;
 		}
-	case 0:
-		DEBUG("未输入文件名\n");
-		return SUCCESS;
-	default:
+	}
+	else if (arg->len == 0)
+	{
+		DEBUG("未输入目录名\n");
+		return ERROR;
+	}
+	else
+	{
 		strcpy(error.msg, "参数数量错误\n\x00");
 		printf("参数数量错误\n");
 		return ERROR;
 	}
+
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
 	FAT_DS_BLOCK4K fat_ds;

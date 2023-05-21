@@ -19,26 +19,14 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     MBR mbr;
     BS_BPB bpb;
 
-    switch (arg->len)
+    if (arg->len == 1)
     {
-    case 1:
-        if (strcmp(arg->argv[0], "/?") == 0 && arg->len == 1)
+        if (strcmp(arg->argv[0], "/?") == 0)
         {
             printf(helpstr);
             return SUCCESS;
         }
-        else
-        {
-            strcpy(fileName, arg->argv[0]);
-            break;
-        }
-        break;
-    case 0:
-        break;
-    default:
-        strcpy(error.msg, "参数数量错误\n\x00");
-        printf("参数数量错误\n");
-        return ERROR;
+        strcpy(fileName, arg->argv[0]);
     }
 
     fp = fopen(fileName, "rb+");

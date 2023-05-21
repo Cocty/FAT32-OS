@@ -107,33 +107,28 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     BLOCK4K block4k;
     BLOCK block;
     FILE *fp = NULL;
-    switch (arg->len)
+    if (arg->len == 3)
     {
-    case 3:
         strncpy(fileName, arg->argv[2], ARGLEN);
-    case 2:
+    }
+    else if (arg->len == 2)
+    {
         strncpy(fatName, arg->argv[1], 8);
-    case 1:
-        if (strcmp(arg->argv[0], "/?") == 0 && arg->len == 1)
+    }
+    else if (arg->len == 1)
+    {
+        if (strcmp(arg->argv[0], "/?") == 0)
         {
             printf(helpstr);
             return SUCCESS;
         }
-        else
-        {
-            break;
-        }
-        break;
-    default:
+    }
+    else
+    {
         strcpy(error.msg, "参数数量错误\n\x00");
         printf("参数数量错误\n");
         return ERROR;
     }
-    // if(arg->len>3){
-    //     strcpy(error.msg,"参数数量错误\n\x00");
-    //     printf("参数数量错误\n");
-    //     return ERROR;
-    // }
 
     DEBUG("%s %d", arg->argv[0], ctoi(arg->argv[0]));
     int size = ctoi(arg->argv[0]);

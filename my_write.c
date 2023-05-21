@@ -13,10 +13,11 @@ int my_write(const ARGP arg, FileSystemInfop fileSystemInfop)
 语法格式    write name type [offset]\n\
 name        写入文件名\n\
 type        写入模式0截断 1追加 2覆盖\n\
-若是覆盖写则offset有效，为覆盖的起始位置\n";
+默认是截断写\n\
+若是覆盖写则offset有效，为覆盖的起始位置\n ";
     // FAT_DS_BLOCK4K fat_ds;
     char name[12];
-    int type = -1;
+    int type = 0;
     u32 offset = 0;
     if (fileSystemInfop->flag == FALSE)
     {
@@ -24,65 +25,53 @@ type        写入模式0截断 1追加 2覆盖\n\
         printf("未指定文件系统\n");
         return ERROR;
     }
-    switch (arg->len)
+    if (nameCheckChange(arg->argv[0], name) == ERROR)
     {
-    case 3:
+        strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
+        printf("文件名过长或存在非法字符\n");
+        return ERROR;
+    }
+    for (int i = 0; i < 11; i++)
+    {
+        name[i] = toupper(name[i]);
+    }
+    name[11] = '\0';
+
+    if (arg->len == 3)
+    {
         offset = ctoi(arg->argv[2]);
-        if (offset == INF)
-        {
-            goto error;
-        }
-    case 2:
-        if (nameCheckChange(arg->argv[0], name) == ERROR)
-        {
-            strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
-            printf("文件名过长或存在非法字符\n");
-            return ERROR;
-        }
-        for (int i = 0; i < 11; i++)
-        {
-            name[i] = toupper(name[i]);
-        }
-        name[11] = '\0';
-        DEBUG("|%s|\n", name);
         type = ctoi(arg->argv[1]);
-        if (type == 2)
-        {
-            if (arg->len != 3)
-            {
-                goto error;
-            }
-        }
-        else if (type == INF)
+        if (type != 2 && offset == INF)
         {
             strcpy(error.msg, "写入模式非法\n\x00");
             printf("写入模式非法\n");
             return ERROR;
         }
-        else
+    }
+    else if (arg->len == 2)
+    {
+        type = ctoi(arg->argv[1]);
+        if (type != 0 && type != 1)
         {
-            if (arg->len != 2)
-            {
-                goto error;
-            }
+            strcpy(error.msg, "写入模式非法\n\x00");
+            printf("写入模式非法\n");
+            return ERROR;
         }
-        break;
-
-    case 1:
+    }
+    else if (arg->len == 1)
+    {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
             printf(helpstr);
             return SUCCESS;
         }
-        else
-        {
-            goto error;
-        }
-        break;
-    case 0:
-        break;
-    default:
-    error:;
+    }
+    else if (arg->len == 0)
+    {
+        printf("未输入文件名！\n");
+    }
+    else
+    {
         strcpy(error.msg, "参数数量错误\n\x00");
         printf("参数数量错误\n");
         return ERROR;
@@ -127,9 +116,6 @@ type        写入模式0截断 1追加 2覆盖\n\
                             if (num >= ARGLEN * 10)
                             {
                                 first++;
-                                // for(int i=0;i<num;i++){
-                                //     DEBUG("%d|",buf[i]);
-                                // }
                                 writelen += write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
                                 num = 0;
                             }
@@ -145,11 +131,11 @@ type        写入模式0截断 1追加 2覆盖\n\
             }
         }
         pathNum = getNext(fileSystemInfop, pathNum);
-    } while (pathNum != FAT_FREE && pathNum != FAT_END);
+    } while (pathNum != 0 && pathNum != FAT_END);
     printf("文件不存在\n");
-
     return SUCCESS;
 }
+
 int write_in(int fnum, int type, u32 start, u32 size, void *buf, FileSystemInfop fileSystemInfop)
 {
     if (fnum < 0 && fnum >= OPENFILESIZE)

@@ -25,21 +25,29 @@ start		读取的开始位置 默认为0\n";
 		printf("未指定文件系统\n");
 		return ERROR;
 	}
-	switch (arg->len)
+
+	if (arg->len == 3)
 	{
-	case 3:
 		start = ctoi(arg->argv[2]);
 		if (start == INF)
 		{
-			goto error;
+			strcpy(error.msg, "参数数量错误\n\x00");
+			printf("参数数量错误\n");
+			return ERROR;
 		}
-	case 2:
+	}
+	else if (arg->len == 2)
+	{
 		len = ctoi(arg->argv[1]);
 		if (len == INF)
 		{
-			goto error;
+			strcpy(error.msg, "参数数量错误\n\x00");
+			printf("参数数量错误\n");
+			return ERROR;
 		}
-	case 1:
+	}
+	else if (arg->len == 1)
+	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
 			printf(helpstr);
@@ -59,13 +67,6 @@ start		读取的开始位置 默认为0\n";
 			}
 			name[11] = '\0';
 		}
-	case 0:
-		break;
-	default:
-	error:;
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
 	}
 
 	u32 pathNum = fileSystemInfop->pathNum;

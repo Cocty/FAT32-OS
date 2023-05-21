@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #define ARGNUM 10   /* 最大参数数量 */
 #define ARGLEN 1024 /*  单一参数最大长度 */
@@ -40,10 +41,12 @@
 #define DIR_d ".          "
 #define DIR_dd "..         "
 #define OPENFILESIZE 10
-typedef unsigned long long u64;
-typedef unsigned int u32;
-typedef unsigned short u16;
-typedef unsigned char u8;
+#define GET_BIT(x, bit) ((x & (1 << bit)) >> bit) /* 获取第bit位 */
+
+typedef uint64_t u64;
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
 
 #define __DEBUG__
 #ifdef __DEBUG__
@@ -154,6 +157,18 @@ typedef struct __FAT_DS
     u32 DIR_FileSize;
 } FAT_DS, *FAT_DSp;
 
+typedef struct LONG_FILENAME_TERM //长文件名目录项
+{
+    u8 LDIR_Ord;        // 目录项序号
+    u16 LDIR_Name1[5];  // 字符1-5
+    u8 LDIR_Attr;       // 属性位（固定为0x0F）
+    u8 LDIR_Type;       // 目录项类型（固定为0）
+    u8 LDIR_Chksum;     // 校验和
+    u16 LDIR_Name2[6];  // 字符6-11
+    u16 LDIR_FstClusLO; // 簇号的低16位
+    u16 LDIR_Name3[2];  // 字符12-13
+};
+
 typedef struct __MBR_in
 {
     u8 flag;
@@ -228,28 +243,40 @@ typedef struct __FSInfo
     u32 end;
 } FSInfo, *FSInfop;
 
-//512FAT表
+//表示FAT表中一个扇区有128个FAT表项
 typedef struct __FAT
 {
     u32 fat[BLOCKSIZE / 4];
 } FAT, FATp;
 
-typedef struct __FAT4K
-{
-    u32 fat[SPCSIZE / 4];
-} FAT4K, FAT4Kp;
-
-/* fat目录项512 */
-typedef struct __FAT_DS_BLOCK
-{
-    FAT_DS fat[BLOCKSIZE / sizeof(FAT_DS)];
-} FAT_DS_BLOCK, *FAT_DS_BLOCKp;
-
-/* fat目录项4K */
+//一个簇中128个目录项
 typedef struct __FAT_DS_BLOCK4K
 {
     FAT_DS fat[SPCSIZE / sizeof(FAT_DS)];
 } FAT_DS_BLOCK4K, *FAT_DS_BLOCK4Kp;
+
+//vhd结构体
+typedef struct __hd_ftr
+{
+    char cookie[8];     /* Identifies original creator of the disk      */
+    u32 features;       /* Feature Support -- see below                 */
+    u32 ff_version;     /* (major,minor) version of disk file           */
+    u64 data_offset;    /* Abs. offset from SOF to next structure       */
+    u32 timestamp;      /* Creation time.  secs since 1/1/2000GMT       */
+    char crtr_app[4];   /* Creator application                          */
+    u32 crtr_ver;       /* Creator version (major,minor)                */
+    u32 crtr_os;        /* Creator host OS                              */
+    u64 orig_size;      /* Size at creation (bytes)                     */
+    u64 curr_size;      /* Current size of disk (bytes)                 */
+    u32 geometry;       /* Disk geometry                                */
+    u32 type;           /* Disk type                                    */
+    u32 checksum;       /* 1's comp sum of this struct.                 */
+    char uuid[16];      /* Unique disk ID, used for naming parents      */
+    char saved;         /* one-bit -- is this disk/VM in a saved state? */
+    char hidden;        /* tapdisk-specific field: is this vdi hidden?  */
+    char reserved[426]; /* padding                                      */
+} HD_FTR, *HD_FTRp;
+
 #pragma pack()
 
 //全局错误结构体
@@ -279,28 +306,6 @@ typedef struct __ARGV
     /* 参数数组 */
     char argv[ARGNUM][ARGLEN];
 } ARG, *ARGP;
-
-//vhd结构体
-typedef struct __hd_ftr
-{
-    char cookie[8];     /* Identifies original creator of the disk      */
-    u32 features;       /* Feature Support -- see below                 */
-    u32 ff_version;     /* (major,minor) version of disk file           */
-    u64 data_offset;    /* Abs. offset from SOF to next structure       */
-    u32 timestamp;      /* Creation time.  secs since 1/1/2000GMT       */
-    char crtr_app[4];   /* Creator application                          */
-    u32 crtr_ver;       /* Creator version (major,minor)                */
-    u32 crtr_os;        /* Creator host OS                              */
-    u64 orig_size;      /* Size at creation (bytes)                     */
-    u64 curr_size;      /* Current size of disk (bytes)                 */
-    u32 geometry;       /* Disk geometry                                */
-    u32 type;           /* Disk type                                    */
-    u32 checksum;       /* 1's comp sum of this struct.                 */
-    char uuid[16];      /* Unique disk ID, used for naming parents      */
-    char saved;         /* one-bit -- is this disk/VM in a saved state? */
-    char hidden;        /* tapdisk-specific field: is this vdi hidden?  */
-    char reserved[426]; /* padding                                      */
-} HD_FTR, *HD_FTRp;
 
 int my_help();
 
