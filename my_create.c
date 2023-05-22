@@ -58,7 +58,7 @@ name       创建文件的名字\n\
     while (TRUE)
     {
 
-        do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号
+        do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号所在簇的内容
         for (cut = 0; cut < SPCSIZE / 32; cut++)                                                 //遍历该簇下的每个目录项
         {
             char lin[12];
@@ -94,10 +94,14 @@ name       创建文件的名字\n\
         }
         else
         {
-            //找到了空的，分配一个目录项
+            u32 pathnumd = newfree(fileSystemInfop, 0); //分配一个新簇，且不连接
             memset(&fat_ds.fat[cut], 0, sizeof(FAT_DS));
+
+            //开始写目录项
             strncpy(fat_ds.fat[cut].name, name, 11);
             fat_ds.fat[cut].DIR_Attr = ATTR_ARCHIVE;
+            fat_ds.fat[cut].DIR_FstClusHI = (u16)(pathnumd >> 16);
+            fat_ds.fat[cut].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
 
             //写入新建文件
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));

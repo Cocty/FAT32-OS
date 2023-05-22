@@ -127,7 +127,7 @@ name	  想要删除的文件夹名\n";
 					printf("文件夹非空\n");
 					return ERROR;
 				}
-				while (delfileNum != FAT_END)
+				while (delfileNum != FAT_END && delfileNum != 0)
 				{
 					delfileNum = delfree(fileSystemInfop, delfileNum);
 				}

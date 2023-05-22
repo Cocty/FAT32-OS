@@ -96,8 +96,8 @@ name       创建文件夹的名字\n\
             else if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) &&
                      strcmp(name, lin) == 0)
             {
-                strcpy(error.msg, "文件已存在\n\x00");
-                printf("文件已存在\n");
+                strcpy(error.msg, "文件夹已存在\n\x00");
+                printf("文件夹已存在\n");
                 return ERROR;
             }
         }
@@ -121,17 +121,18 @@ name       创建文件夹的名字\n\
         {
             //找到了空的
             //取得. 与..
-            u32 pathnumd = newfree(fileSystemInfop, 0);
+            u32 pathnumd = newfree(fileSystemInfop, 0); //分配一个新簇，不连接
+            //开始写新的簇号，初始化.目录和..目录
             FAT_DS_BLOCK4K fat_ds_d;
             memset(&fat_ds_d, 0, SPCSIZE);
             strncpy(fat_ds_d.fat[0].name, DIR_d, 11);
             strncpy(fat_ds_d.fat[1].name, DIR_dd, 11);
             fat_ds_d.fat[0].DIR_Attr = ATTR_DIRECTORY;
             fat_ds_d.fat[1].DIR_Attr = ATTR_DIRECTORY;
-            fat_ds_d.fat[0].DIR_FstClusHI = (u16)(pathnumd >> 16);
+            fat_ds_d.fat[0].DIR_FstClusHI = (u16)(pathnumd >> 16); //.代表本目录项，簇号是新分配的
             fat_ds_d.fat[0].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
             fat_ds_d.fat[1].DIR_FstClusHI = (u16)(pathNum_parent >> 16);
-            fat_ds_d.fat[1].DIR_FstClusLO = (u16)(pathNum_parent & 0x0000ffff);
+            fat_ds_d.fat[1].DIR_FstClusLO = (u16)(pathNum_parent & 0x0000ffff); //..代表父目录，低16位为父目录的起始簇号
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds_d, L2R(fileSystemInfop, pathnumd));
 
             memset(&fat_ds.fat[cut], 0, sizeof(FAT_DS));

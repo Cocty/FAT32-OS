@@ -86,7 +86,7 @@ name	  想要删除的文件名\n";
 					}
 				}
 				delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //找到该文件所在的起始簇号
-				while (delfileNum != FAT_END)
+				while (delfileNum != FAT_END && delfileNum != 0)
 				{
 					delfileNum = delfree(fileSystemInfop, delfileNum);
 				}

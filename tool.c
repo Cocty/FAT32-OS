@@ -44,7 +44,7 @@ int do_read_block4k(FILE *fp, BLOCK4K *block4k, int offset)
     }
     else
     {
-        DEBUG("read4k %d %x-%x\n", offset, offset * SPCSIZE, offset * SPCSIZE + sizeof(BLOCK4K));
+        DEBUG("read4k 物理簇号%d 范围%x-%x\n", offset, offset * SPCSIZE, offset * SPCSIZE + sizeof(BLOCK4K));
         fseek(fp, offset * SPCSIZE, SEEK_SET);
         ret = fread(block4k, sizeof(BLOCK4K), 1, fp);
     }

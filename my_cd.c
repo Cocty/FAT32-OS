@@ -52,29 +52,19 @@ name       进入文件夹的名字\n\
 
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
-	//	while(TRUE){
+
 	do
 	{
 		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 		for (cut = 0; cut < SPCSIZE / 32; cut++)
 		{
 			char lin[12];
-			strncpy(lin, fat_ds.fat[cut].name, 11); //是获取文件的名称？？？
+			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
-
-			//			if(fat_ds.fat[cut].DIR_Attr==0){//是什么特殊的属性吗
-			//   				break;
-			//			}else
-			//	DEBUG("in1%s|\n",lin);
-			//DEBUG("in2%s|\n",name);
 			if ((fat_ds.fat[cut].DIR_Attr & ATTR_DIRECTORY) && strcmp(name, lin) == 0)
-			{ //前半部分什么意思，介绍下read的具体步骤
-				//路径快修改
+			{
 				fileSystemInfop->pathNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO);
-				//DEBUG("%u\n",fileSystemInfop->pathNum);
-				//DEBUG("%u\n",fat_ds.fat[cut].DIR_FstClusHI);
-				//DEBUG("%u\n",fat_ds.fat[cut].DIR_FstClusLO);
-				//路径字符串修改
+
 				if (strcmp(lin, DIR_d) == 0)
 				{
 				}

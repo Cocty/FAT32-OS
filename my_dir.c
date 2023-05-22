@@ -70,7 +70,7 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 				filesize += fat_ds.fat[cut].DIR_FileSize;
 				file++;
 				printf("%6s %10d %8.8s %3.3s\n",
-					   "", fat_ds.fat[cut].DIR_FileSize, fat_ds.fat[cut].name, fat_ds.fat[cut].named);
+					   "<FILE>", fat_ds.fat[cut].DIR_FileSize, fat_ds.fat[cut].name, fat_ds.fat[cut].named);
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
