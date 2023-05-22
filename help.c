@@ -1,6 +1,6 @@
-#include<stdio.h>
-#include"fs.h"
-const char help_str[]="文件系统\n\
+#include <stdio.h>
+#include "fs.h"
+const char help_str[] = "文件系统\n\
 符合fat32标注文件可以作为虚拟磁盘挂载\n\
 命令      作用\n\
 format    格式化文件系统\n\
@@ -16,9 +16,11 @@ close     关闭文件\n\
 write     写文件\n\
 read      读文件\n\
 help      显示提示\n\
+info      显示文件系统的信息\n\
 \n";
 
-int my_help(){
-    printf("%s",help_str);
+int my_help()
+{
+    printf("%s", help_str);
     return SUCCESS;
 }

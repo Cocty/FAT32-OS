@@ -30,13 +30,13 @@ int getargv(ARGP argp);
 //逻辑簇转实际簇号
 u32 L2R(FileSystemInfop fsip, u32 num);
 
-//实际写入函数 offext为偏移块数 为-1时保持文件默认指针
+//实际写入函数 offset为偏移块数 为-1时保持文件默认指针
 int do_write_block4k(FILE *fp, BLOCK4K *block4k, int offset);
-//实际写入函数 offext为偏移块数 为-1时保持文件默认指针 num 为第几块0-7
+//实际写入函数 offset为偏移块数 为-1时保持文件默认指针 num 为第几块0-7
 int do_write_block(FILE *fp, BLOCK *block, int offset, int num);
-//实际读入函数 offext为偏移块数 为-1时保持文件默认指针
+//实际读入函数 offset为偏移块数 为-1时保持文件默认指针
 int do_read_block4k(FILE *fp, BLOCK4K *block4k, int offset);
-//实际读入函数 offext为偏移块数 为-1时保持文件默认指针 num 为第几块0-7
+//实际读入函数 offset为偏移块数 为-1时保持文件默认指针 num 为第几块0-7
 int do_read_block(FILE *fp, BLOCK *block, int offset, int num);
 
 /* 取得一个空闲簇簇号 返回0失败，否则返回空闲簇号 num为当前簇号，若num=0则不连接，直接分配一个簇，否则num簇的FAT表项为新分配的表项的簇号

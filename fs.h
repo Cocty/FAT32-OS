@@ -48,7 +48,7 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
 
-#define __DEBUG__
+// #define __DEBUG__
 #ifdef __DEBUG__
 #define DEBUG printf
 #endif
@@ -331,8 +331,11 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop);
 int my_close(const ARGP arg, FileSystemInfop fileSystemInfop);
 /* 用户使用的文件写 */
 int my_write(const ARGP arg, FileSystemInfop fileSystemInfop);
-/*  程序使用的文件度*/
+/*  程序使用的文件读*/
 int my_read(const ARGP arg, FileSystemInfop fileSystemInfop);
+
+//显示文件系统信息
+int my_info(const ARGP arg, FileSystemInfop fileSystemInfop);
 
 /* 程序用关闭 fnum为文件描述符 */
 int close_in(int fnum, FileSystemInfop fileSystemInfop);

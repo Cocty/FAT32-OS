@@ -89,12 +89,12 @@ int newfree(FileSystemInfop fsip, u32 num)
 {
 
     FAT fat;
-    u32 cuNum = num / (512 / 4);
-    u32 index = num % (512 / 4);
+    u32 cuNum = num / (BLOCKSIZE / 4);
+    u32 index = num % (BLOCKSIZE / 4);
     for (u32 i = 0; i < fsip->BPB_FATSz32; i++) //遍历fat表
     {
         do_read_block(fsip->fp, (BLOCK *)&fat, (fsip->FAT[0] + i) / 8, (fsip->FAT[0] + i) % 8);
-        for (int j = 0; j < 512 / 4; j++) // 遍历FAT一个扇区的每个表项
+        for (int j = 0; j < BLOCKSIZE / 4; j++) // 遍历FAT一个扇区的每个表项
         {
             if (fat.fat[j] == FAT_FREE)
             {
