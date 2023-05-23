@@ -51,4 +51,16 @@ u32 getNext(FileSystemInfop fsip, u32 num);
 /* 把输入的文件名转换为83明明格式的文件名 若文件名合法则返回SUCCESS否则返回ERROR */
 int nameCheckChange(const char name[ARGLEN], char name38[12]);
 
+//检查短目录项
+int nameCheck(char name[ARGLEN]);
+
+/*将GBK的char数组转化为UTF16编码格式的数组*/
+wchar_t *GBKToUTF16(const char *gbkStr);
+
+// 将UTF-16格式的wchar_t字符串转换为GBK格式的char字符串
+char *UTF16ToGBK(const wchar_t *utf16Str);
+
+//将文件名表示成 ：文件名前六个字符~1扩展名的形式
+void parsename(char *filename, char *new_filename);
+
 #endif

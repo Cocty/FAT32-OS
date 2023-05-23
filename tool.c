@@ -248,6 +248,67 @@ int nameCheckChange(const char name[ARGLEN], char name38[12])
     return ERROR;
 }
 
+int nameCheck(char name[ARGLEN])
+{
+    if (strlen(name) > 11 || strlen(name) <= 0)
+    {
+        return ERROR;
+    }
+    for (int i = strlen(name); i < 11; i++)
+    {
+        name[i] = ' ';
+    }
+    name[11] = '\x0';
+    return SUCCESS;
+}
+
+// 将UTF-16格式的wchar_t字符串转换为GBK格式的char字符串
+char *UTF16ToGBK(const wchar_t *utf16Str)
+{
+    int gbkLength = WideCharToMultiByte(CP_ACP, 0, utf16Str, -1, NULL, 0, NULL, NULL);
+    char *gbkStr = (char *)malloc((gbkLength + 1) * sizeof(char));
+    WideCharToMultiByte(CP_ACP, 0, utf16Str, -1, gbkStr, gbkLength, NULL, NULL);
+    return gbkStr;
+}
+
+// 将GBK格式的char字符串转换为UTF-16格式的wchar_t字符串
+wchar_t *GBKToUTF16(const char *gbkStr)
+{
+    int utf16Length = MultiByteToWideChar(CP_ACP, 0, gbkStr, -1, NULL, 0);
+    wchar_t *utf16Str = (wchar_t *)malloc((utf16Length + 1) * sizeof(wchar_t));
+    MultiByteToWideChar(CP_ACP, 0, gbkStr, -1, utf16Str, utf16Length);
+    return utf16Str;
+}
+void parsename(char *filename, char *new_filename)
+{
+    int dot_pos = -1;
+    for (int i = 0; i < strlen(filename); i++)
+    {
+        if (filename[i] == '.')
+        {
+            dot_pos = i;
+            break;
+        }
+    }
+
+    for (int i = 0; i < 6; i++)
+    {
+        new_filename[i] = filename[i];
+    }
+    new_filename[6] = '~';
+    new_filename[7] = '1';
+    for (int i = dot_pos + 1, j = 8; j < 11; i++, j++)
+    {
+        new_filename[j] = filename[i];
+    }
+
+    /*大写*/
+    for (int i = 0; i < 11; i++)
+    {
+        new_filename[i] = toupper(new_filename[i]);
+    }
+}
+
 int debug_in(char *format, ...)
 {
     return 0;

@@ -16,7 +16,7 @@ type        写入模式0截断 1追加 2覆盖\n\
 默认是截断写\n\
 若是覆盖写则offset有效，为覆盖的起始位置\n ";
     // FAT_DS_BLOCK4K fat_ds;
-    char name[12];
+    char name[ARGLEN];
     int type = 0;
     u32 offset = 0;
     if (fileSystemInfop->flag == FALSE)
@@ -25,17 +25,22 @@ type        写入模式0截断 1追加 2覆盖\n\
         printf("未指定文件系统\n");
         return ERROR;
     }
-    if (nameCheckChange(arg->argv[0], name) == ERROR)
+
+    if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+    {
+
+        for (int i = 0; i < 11; i++)
+        {
+            name[i] = toupper(name[i]);
+        }
+        name[11] = '\0';
+    }
+    else
     {
         strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
         printf("文件名过长或存在非法字符\n");
         return ERROR;
     }
-    for (int i = 0; i < 11; i++)
-    {
-        name[i] = toupper(name[i]);
-    }
-    name[11] = '\0';
 
     if (arg->len == 3)
     {

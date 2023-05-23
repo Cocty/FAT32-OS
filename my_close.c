@@ -6,7 +6,7 @@
 
 int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 {
-	char name[12];
+	char name[ARGLEN];
 	const char helpstr[] =
 		"\
 功能        关闭当前目录的某个文件\n\
@@ -28,18 +28,21 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], name) == ERROR)
+			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+			{
+
+				for (int i = 0; i < 11; i++)
+				{
+					name[i] = toupper(name[i]);
+				}
+				name[11] = '\0';
+			}
+			else
 			{
 				strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
 				printf("文件名过长或存在非法字符\n");
 				return ERROR;
 			}
-			for (int i = 0; i < 11; i++)
-			{
-				name[i] = toupper(name[i]);
-			}
-			name[11] = '\0';
-			DEBUG("|%s|\n", name);
 		}
 	}
 	else if (arg->len == 0)

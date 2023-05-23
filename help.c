@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "fs.h"
-const char help_str[] = "文件系统\n\
-符合fat32标注文件可以作为虚拟磁盘挂载\n\
+const char help_str[] =
+    "符合fat32标注文件可以作为虚拟磁盘挂载\n\
 命令      作用\n\
 format    格式化文件系统\n\
 load      加载文件系统\n\

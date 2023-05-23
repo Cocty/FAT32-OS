@@ -43,7 +43,7 @@ int isEmpty(FileSystemInfop fileSystemInfop, u32 pathNum)
 //暂时设定为只能删除当前目录下的文件,不包含非空目录
 int my_rmdir(const ARGP arg, FileSystemInfop fileSystemInfop)
 {
-	char delname[12];
+	char delname[ARGLEN];
 	const char helpstr[] =
 		"\
 功能		删除文件夹\n\
@@ -66,17 +66,21 @@ name	  想要删除的文件夹名\n";
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], delname) == ERROR)
+			if (nameCheck(arg->argv[0]) == SUCCESS)
 			{
-				strcpy(error.msg, "文件夹名过长或存在非法字符\n\x00");
-				printf("文件夹名过长或存在非法字符\n");
+				strcpy(delname, arg->argv[0]);
+				for (int i = 0; i < 11; i++)
+				{
+					delname[i] = toupper(delname[i]);
+				}
+				delname[11] = '\0';
+			}
+			else
+			{
+				strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
+				printf("文件名过长或存在非法字符\n");
 				return ERROR;
 			}
-			for (int i = 0; i < 11; i++)
-			{
-				delname[i] = toupper(delname[i]);
-			}
-			delname[11] = '\0';
 
 			if (strcmp(arg->argv[0], "..") == 0 || strcmp(arg->argv[0], ".") == 0)
 			{

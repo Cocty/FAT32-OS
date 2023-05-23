@@ -7,7 +7,7 @@
 #define MAXLEN 4098
 int my_read(const ARGP arg, FileSystemInfop fileSystemInfop)
 {
-	char name[12];
+	char name[ARGLEN];
 	u32 start = 0;
 	/* 0为读取所有 */
 	u32 len = 0;
@@ -55,17 +55,21 @@ start		读取的开始位置 默认为0\n";
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], name) == ERROR)
+			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+			{
+
+				for (int i = 0; i < 11; i++)
+				{
+					name[i] = toupper(name[i]);
+				}
+				name[11] = '\0';
+			}
+			else
 			{
 				strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
 				printf("文件名过长或存在非法字符\n");
 				return ERROR;
 			}
-			for (int i = 0; i < 11; i++)
-			{
-				name[i] = toupper(name[i]);
-			}
-			name[11] = '\0';
 		}
 	}
 

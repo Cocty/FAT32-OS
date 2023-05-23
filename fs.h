@@ -4,11 +4,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <wchar.h>
+#include <stdlib.h>
+#include <windows.h>
 
 #define ARGNUM 10   /* 最大参数数量 */
 #define ARGLEN 1024 /*  单一参数最大长度 */
-#define SUCCESS 0   /* 成功返回值 */
-#define ERROR -1    /* 失败返回值 */
+#define SUCCESS 1   /* 成功返回值 */
+#ifndef ERROR
+#define ERROR 0 /* 失败返回值 */
+#endif
 #define TRUE 1
 #define FALSE 0
 #define INF (1 << 30)
@@ -16,6 +21,7 @@
 #define SecPerClus 8
 #define SPCSIZE 4096
 #define K 1024
+#define MAXLENGTH 255
 
 /* 截断写 */
 #define TRUNCATION 0
@@ -48,7 +54,7 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
 
-// #define __DEBUG__
+#define __DEBUG__
 #ifdef __DEBUG__
 #define DEBUG printf
 #endif
@@ -167,7 +173,7 @@ typedef struct LONG_FILENAME_TERM //长文件名目录项
     u16 LDIR_Name2[6];  // 字符6-11
     u16 LDIR_FstClusLO; // 簇号的低16位
     u16 LDIR_Name3[2];  // 字符12-13
-};
+} Longfile_term, *Longfile_termp;
 
 typedef struct __MBR_in
 {
@@ -339,7 +345,7 @@ int my_info(const ARGP arg, FileSystemInfop fileSystemInfop);
 
 /* 程序用关闭 fnum为文件描述符 */
 int close_in(int fnum, FileSystemInfop fileSystemInfop);
-/* 程序用度函数 */
+/* 程序用度读函数 */
 int read_in(int fnum, int start, int len, void *buf, FileSystemInfop fileSystemInfop);
 /* 
     程序用写函数 正确返回写入长度错误返回负数
@@ -357,4 +363,10 @@ int write_in(int fnum, int type, u32 start, u32 size, void *buf, FileSystemInfop
 int write_real(int fnum, u32 start, u32 size, void *buf, FileSystemInfop fileSystemInfop);
 /* 真正读出函数  size=0位读出所有*/
 int read_real(int fnum, u32 start, u32 size, void *buf, FileSystemInfop fileSystemInfop);
+
+/*创建短名文件*/
+int create_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+/*创建长名文件*/
+int create_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
 #endif //__FS__

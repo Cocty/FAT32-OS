@@ -3,29 +3,6 @@
 #include <memory.h>
 #include <ctype.h>
 
-int nameCheck(char name[ARGLEN])
-{
-    if (strlen(name) > 11 || strlen(name) <= 0)
-    {
-        return ERROR;
-    }
-    // for(u32 i=0;i<strlen(name);i++){
-    //     if(!(isalnum(name[i]) || isalpha(name[i]) || isspace(name[i]) ||
-    //              name[i]=='$' || name[i]=='%' || name[i]=='\'' || name[i]=='-' ||
-    //               name[i]=='_' || name[i]=='@' || name[i]=='~' || name[i]=='`' ||
-    //               name[i]=='!' || name[i]=='(' || name[i]==')' || name[i]=='{' ||
-    //               name[i]=='}' || name[i]=='^' || name[i]=='#' || name[i]=='&')){
-    //         return ERROR;
-    //     }
-    // }
-    for (int i = strlen(name); i < 11; i++)
-    {
-        name[i] = ' ';
-    }
-    name[11] = '\x0';
-    return SUCCESS;
-}
-
 int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop)
 {
     const char helpstr[] =
@@ -51,18 +28,21 @@ name       创建文件夹的名字\n\
         }
         else
         {
-            strcpy(name, arg->argv[0]);
-            if (nameCheck(name) == ERROR)
+            if (nameCheck(arg->argv[0]) == SUCCESS)
+            {
+                strcpy(name, arg->argv[0]);
+                for (int i = 0; i < 11; i++)
+                {
+                    name[i] = toupper(name[i]);
+                }
+                name[11] = '\0';
+            }
+            else
             {
                 strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
                 printf("文件名过长或存在非法字符\n");
                 return ERROR;
             }
-            for (int i = 0; i < 11; i++)
-            {
-                name[i] = toupper(name[i]);
-            }
-            name[11] = '\0';
         }
     }
     else if (arg->len == 0)

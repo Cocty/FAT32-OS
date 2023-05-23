@@ -14,6 +14,9 @@
         "cstdio": "c",
         "cstdlib": "c",
         "type_traits": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "fs.h": "c",
+        "memory.h": "c",
+        "ctype.h": "c"
     }
 }
