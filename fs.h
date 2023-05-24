@@ -371,4 +371,16 @@ int create_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
 /*创建长名目录*/
 int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
+/*移除短名文件*/
+int rm_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+/*移除长名文件*/
+int rm_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
+/*移除长文件名目录*/
+int rm_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
+/*移除短文件名目录*/
+int rm_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
 #endif //__FS__

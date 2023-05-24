@@ -263,7 +263,7 @@ int nameCheck(char name[ARGLEN])
 }
 
 // 将UTF-16格式的wchar_t字符串转换为GBK格式的char字符串
-char *UTF16ToGBK(const wchar_t *utf16Str)
+char *UTF16ToGBK(wchar_t *utf16Str)
 {
     int gbkLength = WideCharToMultiByte(CP_ACP, 0, utf16Str, -1, NULL, 0, NULL, NULL);
     char *gbkStr = (char *)malloc((gbkLength + 1) * sizeof(char));

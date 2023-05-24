@@ -58,7 +58,7 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 				cut++;
 				continue;
 			}
-			if (fat_ds.fat[cut].DIR_Attr == 0x0f) //表示是长文件名目录项
+			if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
 			{
 				Longfile_termp long_file_term = (Longfile_termp)&fat_ds.fat[cut];
 				wchar_t new_filename[255];
@@ -99,22 +99,24 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 				long_file_term = NULL;
 				new_filename[index++] = L'\0';
 				reverseString(new_filename, wcslen(new_filename));
-				// wprintf(L"%ls\n", new_filename);
+
+				char *filename = UTF16ToGBK(new_filename); //UTF16转化成GBK格式以显示中文
+
 				cut += length; //此时现在指针指向了紧挨着的短文件名目录项
 				if (fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE)
 				{
 					//文件
 					filesize += fat_ds.fat[cut].DIR_FileSize;
 					file++;
-					wprintf(L"%6s %10d %ls\n",
-							L"<FILE>", fat_ds.fat[cut].DIR_FileSize, new_filename);
+					printf("%6s %10d %s\n",
+						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename);
 				}
 				else if (fat_ds.fat[cut].DIR_Attr & ATTR_DIRECTORY)
 				{
 					//目录
 					attr++;
-					wprintf(L"%6s %10s %ls\n",
-							L"<DIR>", L"", new_filename);
+					printf("%6s %10s %s\n",
+						   "<DIR>", "", filename);
 				}
 				cut++;
 			}

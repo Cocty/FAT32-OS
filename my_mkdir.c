@@ -189,7 +189,7 @@ int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             int u = 0;
             for (int i = fdt_num - 1, j = 1; i >= 0; i--, j++) //倒序过来，先从紧挨着短文件名目录项的长文件名目录项开始
             {
-                lfn_term[i].LDIR_Attr = 0x0f;
+                lfn_term[i].LDIR_Attr = ATTR_LONG_NAME;
                 lfn_term[i].LDIR_Type = 0x00;
                 lfn_term[i].LDIR_FstClusLO = 0x0000; //此时长文件名的目录项簇号低16位为0000，是无效的
                 if (i == 0)
