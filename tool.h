@@ -2,7 +2,7 @@
 #ifndef __TOOL__
 #define __TOOL__
 
-//大小端转换
+//大小端转换,因为windows本身fwrite函数是小段字节序写入，但是读取是大端字节序，所以如果要按小端读就要转化。
 //int64
 #define BigtoLittle64(A) ((((u64)(A)&0xff00000000000000L) >> 56) | \
                           (((u64)(A)&0x00ff000000000000L) >> 40) | \
@@ -22,6 +22,8 @@
 //int16
 #define BigtoLittle16(A) ((((u16)(A)&0xff00) >> 8) | \
                           (((u16)(A)&0x00ff) << 8))
+
+#define GET_BIT(x, bit) (((x) >> (bit)) & 1) /* 获取第bit位 */
 
 //字符转数字 出错返回INF
 int ctoi(const char *ch);
@@ -62,5 +64,8 @@ char *UTF16ToGBK(const wchar_t *utf16Str);
 
 //将文件名表示成 ：文件名前六个字符~1扩展名的形式
 void parsename(char *filename, char *new_filename);
+
+/*逆置字符串*/
+void reverseString(wchar_t *str, int length);
 
 #endif

@@ -47,7 +47,6 @@
 #define DIR_d ".          "
 #define DIR_dd "..         "
 #define OPENFILESIZE 10
-#define GET_BIT(x, bit) ((x & (1 << bit)) >> bit) /* 获取第bit位 */
 
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -368,5 +367,8 @@ int read_real(int fnum, u32 start, u32 size, void *buf, FileSystemInfop fileSyst
 int create_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
 /*创建长名文件*/
 int create_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
-
+/*创建短名目录*/
+int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+/*创建长名目录*/
+int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
 #endif //__FS__

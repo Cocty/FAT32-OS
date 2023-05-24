@@ -15,18 +15,18 @@
 void vhdset(HD_FTRp vhd, u64 size)
 {
     strncpy(vhd->cookie, "conectix", 8);
-    vhd->features = BigtoLittle32(0x00000002);
-    vhd->ff_version = BigtoLittle32(0x00010000);
-    vhd->data_offset = BigtoLittle64(0xFFFFFFFFFFFFFFFF);
+    vhd->features = 0x00000002;
+    vhd->ff_version = 0x00010000;
+    vhd->data_offset = 0xFFFFFFFFFFFFFFFF;
     vhd->timestamp = 0x00000000;
     strncpy(vhd->crtr_app, "myfs", 4);
     vhd->crtr_ver = BigtoLittle32(0x00060001);
     // strcpy((char*)vhd->crtr_os,"Wi2k");
-    vhd->crtr_os = BigtoLittle32(0x5769326b);
-    vhd->orig_size = BigtoLittle64(size);
-    vhd->curr_size = BigtoLittle64(size);
-    vhd->geometry = BigtoLittle32(0x03eb0c11);
-    vhd->type = BigtoLittle32(2); // 类型
+    vhd->crtr_os = 0x5769326b;
+    vhd->orig_size = size;
+    vhd->curr_size = size;
+    vhd->geometry = 0x03eb0c11;
+    vhd->type = 0x2; // 类型
     vhd->checksum = 0;
     // strcmp(vhd->uuid,"                ");
     memset(vhd->uuid, 0xff, sizeof(vhd->uuid));
@@ -37,7 +37,7 @@ void vhdset(HD_FTRp vhd, u64 size)
     {
         chksum += p[i];
     }
-    vhd->checksum = BigtoLittle32(~chksum);
+    vhd->checksum = ~chksum;
 }
 // size为字节数
 void MBRset(MBRp mbr, int size)

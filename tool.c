@@ -290,18 +290,26 @@ void parsename(char *filename, char *new_filename)
             break;
         }
     }
-
-    for (int i = 0; i < 6; i++)
+    if (dot_pos != -1) //文件
     {
-        new_filename[i] = filename[i];
+        for (int i = 0; i < 6; i++)
+        {
+            new_filename[i] = filename[i];
+        }
+        new_filename[6] = '~';
+        new_filename[7] = '1';
+        for (int i = dot_pos + 1, j = 8; j < 11; i++, j++)
+        {
+            new_filename[j] = filename[i];
+        }
     }
-    new_filename[6] = '~';
-    new_filename[7] = '1';
-    for (int i = dot_pos + 1, j = 8; j < 11; i++, j++)
+    else
     {
-        new_filename[j] = filename[i];
+        for (int i = 0; i < 11; i++)
+        {
+            new_filename[i] = filename[i];
+        }
     }
-
     /*大写*/
     for (int i = 0; i < 11; i++)
     {
