@@ -15,7 +15,7 @@ name        写入文件名\n\
 type        写入模式0截断 1追加 2覆盖\n\
 默认是截断写\n\
 若是覆盖写则offset有效，为覆盖的起始位置\n ";
-    // FAT_DS_BLOCK4K fat_ds;
+    FAT_DS_BLOCK4K fat_ds;
     char name[ARGLEN];
     int type = 0;
     u32 offset = 0;
@@ -23,22 +23,6 @@ type        写入模式0截断 1追加 2覆盖\n\
     {
         strcpy(error.msg, "未指定文件系统\n\x00");
         printf("未指定文件系统\n");
-        return ERROR;
-    }
-
-    if (nameCheckChange(arg->argv[0], name) == SUCCESS)
-    {
-
-        for (int i = 0; i < 11; i++)
-        {
-            name[i] = toupper(name[i]);
-        }
-        name[11] = '\0';
-    }
-    else
-    {
-        strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
-        printf("文件名过长或存在非法字符\n");
         return ERROR;
     }
 
@@ -82,7 +66,25 @@ type        写入模式0截断 1追加 2覆盖\n\
         return ERROR;
     }
 
-    FAT_DS_BLOCK4K fat_ds;
+    if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+    {
+
+        for (int i = 0; i < 11; i++)
+        {
+            name[i] = toupper(name[i]);
+        }
+        name[11] = '\0';
+        write_sfn(fileSystemInfop, name, fat_ds, type, offset);
+    }
+    else
+    {
+        strcpy(name, arg->argv[0]);
+        write_lfn(fileSystemInfop, name, fat_ds, type, offset);
+    }
+}
+
+int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int type, int offset)
+{
     u32 pathNum = fileSystemInfop->pathNum;
     Opendfilep opendf;
     u32 cut;
@@ -138,6 +140,121 @@ type        写入模式0截断 1追加 2覆盖\n\
         pathNum = getNext(fileSystemInfop, pathNum);
     } while (pathNum != 0 && pathNum != FAT_END);
     printf("文件不存在\n");
+    return SUCCESS;
+}
+
+int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int type, int offset)
+{
+    u32 pathNum = fileSystemInfop->pathNum;
+    Opendfilep opendf;
+    u32 cut;
+    do
+    {
+        do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号所在的物理簇
+        cut = 0;
+        while (cut < SPCSIZE / 32)
+        { //遍历每个目录项
+            char lin[12];
+            strncpy(lin, fat_ds.fat[cut].name, 11);
+            lin[11] = '\0';
+            if (fat_ds.fat[cut].name[0] == '\xE5' || fat_ds.fat[cut].name[0] == '\x00')
+            {
+                continue;
+            }
+
+            if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
+            {
+                //开始获取长文件名
+                Longfile_termp long_file_term = (Longfile_termp)&fat_ds.fat[cut];
+                wchar_t new_filename[255];
+                u8 length;
+                u8 bit = GET_BIT(long_file_term->LDIR_Ord, 6);
+                if (bit == 1) //判断高半位是否为4，即长文件名目录项开始处
+                {
+                    length = (u8)long_file_term->LDIR_Ord & 0x0f; //获取低4位的值，以确定分配多少目录项
+                }
+                int index = 0;
+                for (int i = length - 1; i >= 0; i--)
+                {
+                    for (int j = 1; j >= 0; j--)
+                    {
+                        if (long_file_term->LDIR_Name3[j] != 0xFFFF)
+                        {
+                            new_filename[index++] = (unsigned short)long_file_term->LDIR_Name3[j];
+                        }
+                    }
+                    for (int j = 5; j >= 0; j--)
+                    {
+                        if (long_file_term->LDIR_Name2[j] != 0xFFFF)
+                        {
+                            new_filename[index++] = (unsigned short)long_file_term->LDIR_Name2[j];
+                        }
+                    }
+
+                    for (int j = 4; j >= 0; j--)
+                    {
+                        if (long_file_term->LDIR_Name1[j] != 0xFFFF)
+                        {
+                            new_filename[index++] = (unsigned short)long_file_term->LDIR_Name1[j];
+                        }
+                    }
+                    long_file_term++; // 指针向后移动，即获取下一个长文件名目录项
+                }
+                new_filename[index++] = L'\0';
+                reverseString(new_filename, wcslen(new_filename));
+                char *filename = UTF16ToGBK(new_filename); //UTF16转化成GBK格式以显示中文
+                //获取长文件名完成
+
+                cut += length; //此时现在指针指向了紧挨着的短文件名目录项
+
+                if (strcmp(filename, name) == 0 && (fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE))
+                {
+                    for (int i = 0; i < OPENFILESIZE; i++)
+                    {
+                        opendf = &(fileSystemInfop->Opendf[i]);
+                        if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
+                        {
+                            if (offset > fat_ds.fat[cut].DIR_FileSize)
+                            {
+                                printf("覆盖位置非法\n");
+                                return SUCCESS;
+                            }
+                            int num = 0;
+                            char buf[ARGLEN * 10];
+                            printf("以EOF结束\n");
+                            int first = 0;
+                            int writelen = 0;
+                            while (scanf("%c", &buf[num]) != EOF && buf[num] != 26)
+                            {
+                                num++;
+                                if (num >= ARGLEN * 10)
+                                {
+                                    first++;
+                                    writelen += write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
+                                    num = 0;
+                                }
+                            }
+                            clearerr(stdin);
+                            write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
+                            return SUCCESS;
+                        }
+                    }
+                    printf("文件未打开\n");
+                    return SUCCESS;
+                }
+                else //不是要写的文件
+                {
+                    cut += 2; //目录项指针指向下一个目录项（要跳过长文件名的短目录项）
+                }
+            }
+            else
+            {
+                cut++; //如果不是长文件名的话就将指针后移继续寻找
+            }
+        }
+        pathNum = getNext(fileSystemInfop, pathNum);
+    } while (pathNum != FAT_END && pathNum != 0);
+    printf("未找到目标文件，打开失败!\n");
     return SUCCESS;
 }
 
@@ -225,25 +342,6 @@ int write_real(int fnum, u32 start, u32 size, void *buf, FileSystemInfop fileSys
         opendf->File_Clus = fileclus;
         flagZero = TRUE;
     }
-    // DEBUG("%d\n",SPCSIZE*ceil(fat_ds.fat[opendf->numID].DIR_FileSize/(1.0*SPCSIZE)));
-    // /* 文件长度4k对其  并强制移动*/
-    // int lin=fat_ds.fat[opendf->numID].DIR_FileSize;
-    // if(lin%SPCSIZE!=0){
-    //     lin=(lin/SPCSIZE+1)*SPCSIZE;
-    // }
-    // if(lin<=start){
-    //     int lin=start;
-    //     if(lin%SPCSIZE!=0){
-    //         lin=(lin/SPCSIZE+1)*SPCSIZE;
-    //     }
-    //     for(int i=0;i<lin/SPCSIZE;i++){
-    //         int old=fileclus;
-    //         fileclus=getNext(fileSystemInfop,fileclus);
-    //         if(fileclus==FAT_END||fileclus==FAT_SAVE||FAT_FREE){
-    //             fileclus=newfree(fileSystemInfop,old);
-    //         }
-    //     }
-    // }
     opendf->writep = start;
     BLOCK4K block4k;
     /* 寻找要写的磁盘块 */

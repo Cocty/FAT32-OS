@@ -40,10 +40,10 @@ name       创建文件的名字\n\
             else
             {
                 strcpy(name, arg->argv[0]);
-                create_lfn(fileSystemInfop, name, fat_ds);
-                // strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
-                // printf("文件名过长或存在非法字符\n");
-                // return ERROR;
+                if (Is_repeat(name, fileSystemInfop, fat_ds) != ERROR)
+                {
+                    create_lfn(fileSystemInfop, name, fat_ds);
+                }
             }
         }
     }

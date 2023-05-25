@@ -43,7 +43,7 @@ int do_read_block(FILE *fp, BLOCK *block, int offset, int num);
 
 /* 取得一个空闲簇簇号 返回0失败，否则返回空闲簇号 num为当前簇号，若num=0则不连接，直接分配一个簇，否则num簇的FAT表项为新分配的表项的簇号
 */
-u32 newfree(FileSystemInfop fsip, u32 num);
+int newfree(FileSystemInfop fsip, u32 num);
 
 //释放一个已用簇 num簇号，返回被删除的下一块的簇号
 int delfree(FileSystemInfop fsip, u32 num);
@@ -60,12 +60,15 @@ int nameCheck(char name[ARGLEN]);
 wchar_t *GBKToUTF16(const char *gbkStr);
 
 // 将UTF-16格式的wchar_t字符串转换为GBK格式的char字符串
-char *UTF16ToGBK(const wchar_t *utf16Str);
+char *UTF16ToGBK(wchar_t *utf16Str);
 
 //将文件名表示成 ：文件名前六个字符~1扩展名的形式
 void parsename(char *filename, char *new_filename);
 
 /*逆置字符串*/
 void reverseString(wchar_t *str, int length);
+
+/*判断是否重名，即创建文件时是否与当前目录下的某个文件重名*/
+int Is_repeat(char *name, FileSystemInfop fileSystemInfop, FAT_DS_BLOCK4K fat_ds);
 
 #endif

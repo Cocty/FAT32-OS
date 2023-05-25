@@ -41,7 +41,10 @@ name       创建文件夹的名字\n\
             else
             {
                 strcpy(name, arg->argv[0]);
-                create_lfn_dir(fileSystemInfop, name, fat_ds);
+                if (Is_repeat(name, fileSystemInfop, fat_ds) != ERROR)
+                {
+                    create_lfn_dir(fileSystemInfop, name, fat_ds);
+                }
             }
         }
     }

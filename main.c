@@ -62,7 +62,6 @@ int main()
         else if (strcmp(cmd, "open") == 0)
         {
             my_open(&argv, &fileSysInfo);
-            DEBUG("open\n");
         }
         else if (strcmp(cmd, "close") == 0)
         {

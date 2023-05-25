@@ -35,12 +35,12 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 					name[i] = toupper(name[i]);
 				}
 				name[11] = '\0';
+				open_sfn(fileSystemInfop, name, fat_ds);
 			}
 			else
 			{
-				strcpy(error.msg, "文件名过长或存在非法字符\n\x00");
-				printf("文件名过长或存在非法字符\n");
-				return ERROR;
+				strcpy(name, arg->argv[0]);
+				open_lfn(fileSystemInfop, name, fat_ds);
 			}
 		}
 	}
@@ -55,7 +55,10 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 		printf("参数数量错误\n");
 		return ERROR;
 	}
+}
 
+int open_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
+{
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
 	u32 fileclus;
@@ -69,16 +72,104 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
 
-			if (strcmp(lin, name) == 0)
+			if (strcmp(lin, name) == 0 && (fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE)) //找到了要打开的文件
 			{
-				if (fat_ds.fat[cut].DIR_Attr & ATTR_DIRECTORY)
+
+				fileclus = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO);
+				for (int i = 0; i < OPENFILESIZE; i++)
 				{
-					printf("不能打开文件夹\n");
-					strcpy(error.msg, "不能打开文件夹\n\x00");
-					return SUCCESS;
+					//只能打开一次文件
+					opendfp = &(fileSystemInfop->Opendf[i]);
+					if (opendfp->flag == TRUE)
+					{
+						if ((opendfp->Dir_Clus == pathNum) && (opendfp->File_Clus == fileclus) && (strcmp(opendfp->File_name, name) == 0))
+						{
+							printf("文件已打开\n");
+							return SUCCESS;
+						}
+					}
+					else
+					{
+						opendfp->flag = TRUE;
+						opendfp->Dir_Clus = pathNum;
+						opendfp->File_Clus = fileclus;
+						opendfp->readp = 0;
+						opendfp->writep = 0;
+						opendfp->numID = cut;
+						strcpy(opendfp->File_name, name);
+						printf("%s%d\n", "打开文件成功 文件描述符是", i);
+						return SUCCESS;
+					}
 				}
-				else
+				printf("打开文件数已达到最大，打开失败\n");
+				return SUCCESS;
+			}
+		}
+		pathNum = getNext(fileSystemInfop, pathNum);
+	} while (pathNum != FAT_END && pathNum != 0);
+	printf("未找到目标文件，打开失败!\n");
+	return SUCCESS;
+}
+
+int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
+{
+	u32 pathNum = fileSystemInfop->pathNum;
+	u32 cut;
+	u32 fileclus;
+	Opendfilep opendfp;
+	do
+	{
+		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号所在的物理簇
+		cut = 0;
+		while (cut < SPCSIZE / 32)
+		{													//遍历每个目录项
+			if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
+			{
+				//开始获取长文件名
+				Longfile_termp long_file_term = (Longfile_termp)&fat_ds.fat[cut];
+				wchar_t new_filename[255];
+				u8 length;
+				u8 bit = GET_BIT(long_file_term->LDIR_Ord, 6);
+				if (bit == 1) //判断高半位是否为4，即长文件名目录项开始处
 				{
+					length = (u8)long_file_term->LDIR_Ord & 0x0f; //获取低4位的值，以确定分配多少目录项
+				}
+				int index = 0;
+				for (int i = length - 1; i >= 0; i--)
+				{
+					for (int j = 1; j >= 0; j--)
+					{
+						if (long_file_term->LDIR_Name3[j] != 0xFFFF)
+						{
+							new_filename[index++] = (unsigned short)long_file_term->LDIR_Name3[j];
+						}
+					}
+					for (int j = 5; j >= 0; j--)
+					{
+						if (long_file_term->LDIR_Name2[j] != 0xFFFF)
+						{
+							new_filename[index++] = (unsigned short)long_file_term->LDIR_Name2[j];
+						}
+					}
+
+					for (int j = 4; j >= 0; j--)
+					{
+						if (long_file_term->LDIR_Name1[j] != 0xFFFF)
+						{
+							new_filename[index++] = (unsigned short)long_file_term->LDIR_Name1[j];
+						}
+					}
+					long_file_term++; // 指针向后移动，即获取下一个长文件名目录项
+				}
+				new_filename[index++] = L'\0';
+				reverseString(new_filename, wcslen(new_filename));
+				char *filename = UTF16ToGBK(new_filename); //UTF16转化成GBK格式以显示中文
+
+				cut += length; //此时现在指针指向了紧挨着的短文件名目录项
+
+				if (strcmp(filename, name) == 0 && (fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE)) //找到了要打开的文件
+				{
+
 					fileclus = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO);
 					for (int i = 0; i < OPENFILESIZE; i++)
 					{
@@ -108,6 +199,14 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 					printf("打开文件数已达到最大，打开失败\n");
 					return SUCCESS;
 				}
+				else //不是要打开的文件
+				{
+					cut += 2; //目录项指针指向下一个目录项（要跳过长文件名的短目录项）
+				}
+			}
+			else
+			{
+				cut++; //如果不是长文件名的话就将指针后移继续寻找
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
