@@ -70,11 +70,6 @@ name	  想要删除的文件夹名\n";
 			if (nameCheck(arg->argv[0]) == SUCCESS)
 			{
 				strcpy(delname, arg->argv[0]);
-				for (int i = 0; i < 11; i++)
-				{
-					delname[i] = toupper(delname[i]);
-				}
-				delname[11] = '\0';
 				rm_sfn_dir(fileSystemInfop, delname, fat_ds);
 			}
 			else

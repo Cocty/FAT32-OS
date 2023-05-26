@@ -32,10 +32,6 @@ name       进入文件夹的名字\n\
 			memset(name, ' ', 12);
 			strncpy(name, arg->argv[0], strlen(arg->argv[0]));
 			name[11] = '\0';
-			for (int i = 0; i < 11; i++)
-			{
-				name[i] = toupper(name[i]);
-			}
 			cd_sfn_dir(fileSystemInfop, name, fat_ds);
 		}
 		else if (nameCheck(arg->argv[0]) != SUCCESS)

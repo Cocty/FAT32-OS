@@ -32,12 +32,6 @@ name	  想要删除的文件名\n";
 		{
 			if (nameCheckChange(arg->argv[0], delname) == SUCCESS)
 			{
-
-				for (int i = 0; i < 11; i++)
-				{
-					delname[i] = toupper(delname[i]);
-				}
-				delname[11] = '\0';
 				rm_sfn(fileSystemInfop, delname, fat_ds);
 			}
 			else

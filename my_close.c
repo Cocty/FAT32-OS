@@ -31,12 +31,6 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 		{
 			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
 			{
-
-				for (int i = 0; i < 11; i++)
-				{
-					name[i] = toupper(name[i]);
-				}
-				name[11] = '\0';
 				close_sfn(fileSystemInfop, name, fat_ds);
 			}
 			else

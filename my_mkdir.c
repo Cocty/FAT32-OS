@@ -31,11 +31,6 @@ name       创建文件夹的名字\n\
             if (nameCheck(arg->argv[0]) == SUCCESS)
             {
                 strcpy(name, arg->argv[0]);
-                for (int i = 0; i < 11; i++)
-                {
-                    name[i] = toupper(name[i]);
-                }
-                name[11] = '\0';
                 create_sfn_dir(fileSystemInfop, name, fat_ds);
             }
             else

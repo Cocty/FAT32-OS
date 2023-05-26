@@ -68,12 +68,6 @@ type        写入模式0截断 1追加 2覆盖\n\
 
     if (nameCheckChange(arg->argv[0], name) == SUCCESS)
     {
-
-        for (int i = 0; i < 11; i++)
-        {
-            name[i] = toupper(name[i]);
-        }
-        name[11] = '\0';
         write_sfn(fileSystemInfop, name, fat_ds, type, offset);
     }
     else

@@ -57,12 +57,6 @@ start		读取的开始位置 默认为0\n";
 		{
 			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
 			{
-
-				for (int i = 0; i < 11; i++)
-				{
-					name[i] = toupper(name[i]);
-				}
-				name[11] = '\0';
 				read_sfn(fileSystemInfop, name, fat_ds, len, start);
 			}
 			else
