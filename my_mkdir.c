@@ -1,11 +1,9 @@
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 
-int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        创建文件夹\n\
 语法格式    mkdir name\n\
@@ -15,44 +13,38 @@ name       创建文件夹的名字\n\
     FAT_DS_BLOCK4K fat_ds;
     if (fileSystemInfop->flag == FALSE)
     {
-        strcpy(error.msg, "未指定文件系统\n\x00");
-        printf("未指定文件系统\n");
-        return ERROR;
+        return NONE_FILESYS;
     }
     if (arg->len == 1)
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return SUCCESS;
+            return HELP_STR;
         }
         else
         {
-            if (nameCheck(arg->argv[0]) == SUCCESS)
+            if (nameCheck(arg->argv[0]) == SUC)
             {
                 strcpy(name, arg->argv[0]);
-                create_sfn_dir(fileSystemInfop, name, fat_ds);
+                return create_sfn_dir(fileSystemInfop, name, fat_ds);
             }
             else
             {
                 strcpy(name, arg->argv[0]);
                 if (Is_repeat(name, fileSystemInfop, fat_ds) != ERROR)
                 {
-                    create_lfn_dir(fileSystemInfop, name, fat_ds);
+                    return create_lfn_dir(fileSystemInfop, name, fat_ds);
                 }
             }
         }
     }
     else if (arg->len == 0)
     {
-        DEBUG("文件名空\n");
-        return ERROR;
+        return NULL_FILENAME;
     }
     else
     {
-        strcpy(error.msg, "参数数量错误\n\x00");
-        printf("参数数量错误\n");
-        return ERROR;
+        return WRONG_PARANUM;
     }
 }
 
@@ -77,9 +69,7 @@ int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             else if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) &&
                      strcmp(name, lin) == 0)
             {
-                strcpy(error.msg, "文件夹已存在\n\x00");
-                printf("文件夹已存在\n");
-                return ERROR;
+                return DIR_EXSIST;
             }
         }
         //取得下一个簇
@@ -92,9 +82,7 @@ int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
                 pathNum = newfree(fileSystemInfop, lin);
                 if (pathNum == 0)
                 {
-                    strcpy(error.msg, "磁盘空间不足\n\x00");
-                    printf("磁盘空间不足\n");
-                    return ERROR;
+                    return NOT_ENOUGHSPACE;
                 }
             }
         }
@@ -128,7 +116,7 @@ int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             break;
         }
     }
-    return SUCCESS;
+    return SUC;
 }
 
 int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
@@ -151,9 +139,7 @@ int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             }
             else if (strcmp(name, lin) == 0)
             {
-                strcpy(error.msg, "文件已存在\n\x00");
-                printf("文件已存在\n");
-                return ERROR;
+                return DIR_EXSIST;
             }
         }
         //取得下一个簇
@@ -167,9 +153,7 @@ int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
                 pathNum = newfree(fileSystemInfop, lin);
                 if (pathNum == 0)
                 {
-                    strcpy(error.msg, "磁盘空间不足\n\x00");
-                    printf("磁盘空间不足\n");
-                    return ERROR;
+                    return NOT_ENOUGHSPACE;
                 }
             }
         }

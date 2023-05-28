@@ -28,7 +28,6 @@ int do_write_block(FILE *fp, BLOCK *block, int offset, int num)
     }
     else
     {
-        // DEBUG("write %x-%x\n", offset * SPCSIZE + num * BLOCKSIZE, offset * SPCSIZE + num * BLOCKSIZE + sizeof(BLOCK));
         fseek(fp, offset * SPCSIZE + num * BLOCKSIZE, SEEK_SET);
         ret = fwrite(block, sizeof(BLOCK), 1, fp);
     }
@@ -146,7 +145,7 @@ int getargv(ARGP argp)
     if (gets(cmd) == NULL)
     {
         argp->len = 0;
-        return SUCCESS;
+        return SUC;
     }
     int num = 0;
     int len = 0;
@@ -177,7 +176,7 @@ int getargv(ARGP argp)
         flag = 1;
     }
     argp->len = num;
-    return SUCCESS;
+    return SUC;
 }
 
 // 数字字符串转换为int类型数字,如果非法返回INF，不考虑溢出
@@ -244,7 +243,7 @@ int nameCheckChange(const char name[ARGLEN], char name38[12])
                 name38[i] = name[i];
             }
         }
-        return SUCCESS;
+        return SUC;
     }
     return ERROR;
 }
@@ -260,7 +259,7 @@ int nameCheck(char name[ARGLEN])
         name[i] = ' ';
     }
     name[11] = '\x0';
-    return SUCCESS;
+    return SUC;
 }
 
 // 将UTF-16格式的wchar_t字符串转换为GBK格式的char字符串
@@ -415,5 +414,5 @@ int Is_repeat(char *name, FileSystemInfop fileSystemInfop, FAT_DS_BLOCK4K fat_ds
         }
         pathNum = getNext(fileSystemInfop, pathNum); //取下一个簇
     } while (pathNum != FAT_END);
-    return SUCCESS;
+    return SUC;
 }

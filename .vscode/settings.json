@@ -17,6 +17,9 @@
         "*.tcc": "c",
         "fs.h": "c",
         "memory.h": "c",
-        "ctype.h": "c"
+        "ctype.h": "c",
+        "tool.h": "c",
+        "assert.h": "c",
+        "windows.h": "c"
     }
 }

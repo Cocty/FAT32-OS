@@ -1,8 +1,8 @@
 #include "fs.h"
 #include "tool.h"
-int my_info(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        显示文件系统信息\n\
 语法格式    info item offset\n\
@@ -15,9 +15,7 @@ item       要显示的信息\n\
     const int str_fat1 = fileSystemInfop->BPB_RsvdSecCnt + fileSystemInfop->MBR_start; //Fat表1起始扇区数
     if (fileSystemInfop->flag == FALSE)
     {
-        strcpy(error.msg, "未指定文件系统\n\x00");
-        printf("未指定文件系统\n");
-        return ERROR;
+        return NONE_FILESYS;
     }
     if (strcmp(arg->argv[0], "fat") == 0)
     {
@@ -31,16 +29,12 @@ item       要显示的信息\n\
             len = ctoi(arg->argv[1]);
             if (len > fileSystemInfop->BPB_FATSz32 || len == INF)
             {
-                strcpy(error.msg, "输入非法\n\x00");
-                printf("输入非法！！\n");
-                return ERROR;
+                return WRONG_INPUT;
             }
         }
         else
         {
-            strcpy(error.msg, "参数数量错误\n\x00");
-            printf("参数数量错误\n");
-            return ERROR;
+            return WRONG_PARANUM;
         }
         for (int i = 0; i < len; i++)
         {
@@ -61,7 +55,7 @@ item       要显示的信息\n\
         int all_sec = fileSystemInfop->BPB_TotSec32;      //该分区总的扇区数
         int all_clus = fileSystemInfop->BPB_TotSec32 / 8; //该分区总的簇数
         int rest_sec;                                     //剩余的扇区数
-        int rest_clus;
+        int rest_clus = 0;
         FAT fat;
         for (int i = 0; i < fileSystemInfop->BPB_FATSz32; i++) //遍历fat表所有扇区
         {
@@ -75,9 +69,11 @@ item       要显示的信息\n\
             }
         }
         rest_sec = rest_clus * fileSystemInfop->BPB_SecPerClus;
+        printf("该分区总容量为%10dMB\n", all_sec * fileSystemInfop->BPB_BytsPerSec / 1024 / 1024);
         printf("该分区的总扇区数为%10d\n", all_sec);
         printf("该分区的剩余扇区数为%10d\n", rest_sec);
         printf("该分区的总簇数为%10d\n", all_clus);
         printf("该分区的剩余簇数为%10d\n", rest_clus);
+        printf("空间占用率为%.2f\n", (float)(all_sec - rest_sec) / all_sec);
     }
 }

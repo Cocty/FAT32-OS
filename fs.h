@@ -7,13 +7,13 @@
 #include <wchar.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <memory.h>
+#include <ctype.h>
+#include <math.h>
 
 #define ARGNUM 10   /* 最大参数数量 */
 #define ARGLEN 1024 /*  单一参数最大长度 */
-#define SUCCESS 1   /* 成功返回值 */
-#ifndef ERROR
-#define ERROR 0 /* 失败返回值 */
-#endif
+
 #define TRUE 1
 #define FALSE 0
 #define INF (1 << 30)
@@ -48,12 +48,35 @@
 #define DIR_dd "..         "
 #define OPENFILESIZE 10
 
+#define FILEOPENED 10000          //文件已打开
+#define DIR_NOT_NULL 10001        //文件夹非空
+#define WRONG_WRITE_PATTERN 10002 //写入模式非法
+#define WRONG_COVER_POS 10003     //覆盖位置非法
+#define FILE_NOTOPENED 10004      //文件未打开
+#define MAX_FILE_SIGNAL 10005     //打开文件达到最大数量
+#define DIR_EXSIST 10006          //文件夹已经存在，有重名
+#define NOT_ENOUGHSPACE 10007     //磁盘空间不足
+#define FILE_ERROR 10008          //文件打开量错误
+#define WRONG_FILESYS 10009       //非法的文件系统
+#define WRONG_INPUT 10010         //输入非法
+#define WRONG_CAPACITY 10011      //磁盘容量错误
+#define FILE_EXSIST 10012         //文件已经存在，有重名
+
+#define NONE_FILESYS 1000  //未指定文件系统
+#define WRONG_PARANUM 1001 //参数数量错误
+#define NULL_FILENAME 1002 //空文件名
+#define HELP_STR 1003      //打印帮助文档
+#define FILE_NOTFOUND 1004 //	文件不存在
+
+#define SUC 1  /* 成功返回值 */
+#define ERR -1 /* 失败返回值 */
+
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
 
-// #define __DEBUG__
+#define __DEBUG__
 #ifdef __DEBUG__
 #define DEBUG printf
 #endif
@@ -284,13 +307,6 @@ typedef struct __hd_ftr
 
 #pragma pack()
 
-//全局错误结构体
-typedef struct __ERROR
-{
-    char msg[ARGLEN];
-} ERR;
-extern ERR error;
-
 //块操纵员素
 typedef struct __BLOCK
 {
@@ -312,35 +328,35 @@ typedef struct __ARGV
     char argv[ARGNUM][ARGLEN];
 } ARG, *ARGP;
 
-int my_help();
+int my_help(char **helpstr);
 
-/*成功返回SUCCESS 失败返回ERROR*/
+/*成功返回SUC 失败返回ERR*/
 //命令行可调用
-int my_format(const ARGP arg);
+int my_format(const ARGP arg, char **helpstr);
 //打开文件但未关闭
-int my_load(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_load(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 //退出文件系统
-int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 
-int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop);
-int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop);
-int my_rmdir(const ARGP arg, FileSystemInfop fileSystemInfop);
-int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
+int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
+int my_rmdir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
+int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 创建一个文件但不分配磁盘块 */
-int my_create(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_create(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 移除一个文件并释放磁盘块 */
-int my_rm(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_rm(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 用户与程序使用的文件打开 */
-int my_open(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_open(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 用户使用的文件关闭 */
-int my_close(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_close(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 用户使用的文件写 */
-int my_write(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_write(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /*  程序使用的文件读*/
-int my_read(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 
 //显示文件系统信息
-int my_info(const ARGP arg, FileSystemInfop fileSystemInfop);
+int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 
 /* 程序用关闭 fnum为文件描述符 */
 int close_in(int fnum, FileSystemInfop fileSystemInfop);

@@ -1,13 +1,10 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 
-int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char name[12];
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能        进入文件夹\n\
 语法格式    cd name\n\
@@ -16,40 +13,34 @@ name       进入文件夹的名字\n\
 	FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
-		else if (nameCheck(arg->argv[0]) == SUCCESS) //短目录项
+		else if (nameCheck(arg->argv[0]) == SUC) //短目录项
 		{
 			memset(name, ' ', 12);
 			strncpy(name, arg->argv[0], strlen(arg->argv[0]));
 			name[11] = '\0';
-			cd_sfn_dir(fileSystemInfop, name, fat_ds);
+			return cd_sfn_dir(fileSystemInfop, name, fat_ds);
 		}
-		else if (nameCheck(arg->argv[0]) != SUCCESS)
+		else if (nameCheck(arg->argv[0]) != SUC)
 		{
 			strcpy(name, arg->argv[0]);
-			cd_lfn_dir(fileSystemInfop, name, fat_ds);
+			return cd_lfn_dir(fileSystemInfop, name, fat_ds);
 		}
 	}
 	else if (arg->len == 0)
 	{
-		DEBUG("未输入文件名\n");
-		return ERROR;
+		return NULL_FILENAME;
 	}
 	else
 	{
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
+		return WRONG_PARANUM;
 	}
 }
 
@@ -106,13 +97,12 @@ int cd_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 					strcat(fileSystemInfop->path, "/");
 					fileSystemInfop->path[strlen(fileSystemInfop->path)] = '\x0';
 				}
-				return SUCCESS;
+				return SUC;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_FREE && pathNum != FAT_END);
-	printf("文件夹不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }
 
 int cd_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
@@ -210,7 +200,7 @@ int cd_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 						fileSystemInfop->path[strlen(fileSystemInfop->path)] = '\x0';
 					}
 					cut++;
-					return SUCCESS;
+					return SUC;
 				}
 				else //不是要找的文件夹
 				{
@@ -224,6 +214,5 @@ int cd_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_FREE && pathNum != FAT_END);
-	printf("文件夹不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }

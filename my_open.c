@@ -1,12 +1,9 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
-int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_open(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char name[ARGLEN];
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能        打开当前目录的文件\n\
 语法格式    open name\n\
@@ -14,40 +11,34 @@ int my_open(const ARGP arg, FileSystemInfop fileSystemInfop)
 	FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+			if (nameCheckChange(arg->argv[0], name) == SUC)
 			{
-				open_sfn(fileSystemInfop, name, fat_ds);
+				return open_sfn(fileSystemInfop, name, fat_ds);
 			}
 			else
 			{
 				strcpy(name, arg->argv[0]);
-				open_lfn(fileSystemInfop, name, fat_ds);
+				return open_lfn(fileSystemInfop, name, fat_ds);
 			}
 		}
 	}
 	else if (arg->len == 0)
 	{
-		printf("文件名为空！");
-		return ERROR;
+		return NULL_FILENAME;
 	}
 	else
 	{
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
+		return WRONG_PARANUM;
 	}
 }
 
@@ -78,8 +69,7 @@ int open_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 					{
 						if ((opendfp->Dir_Clus == pathNum) && (opendfp->File_Clus == fileclus) && (strcmp(opendfp->File_name, name) == 0))
 						{
-							printf("文件已打开\n");
-							return SUCCESS;
+							return FILEOPENED;
 						}
 					}
 					else
@@ -92,17 +82,15 @@ int open_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 						opendfp->numID = cut;
 						strcpy(opendfp->File_name, name);
 						printf("%s%d\n", "打开文件成功 文件描述符是", i);
-						return SUCCESS;
+						return SUC;
 					}
 				}
-				printf("打开文件数已达到最大，打开失败\n");
-				return SUCCESS;
+				return MAX_FILE_SIGNAL;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("未找到目标文件，打开失败!\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }
 
 int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
@@ -173,8 +161,7 @@ int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 						{
 							if ((opendfp->Dir_Clus == pathNum) && (opendfp->File_Clus == fileclus) && (strcmp(opendfp->File_name, name) == 0))
 							{
-								printf("文件已打开\n");
-								return SUCCESS;
+								return FILEOPENED;
 							}
 						}
 						else
@@ -187,11 +174,10 @@ int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 							opendfp->numID = cut;
 							strcpy(opendfp->File_name, name);
 							printf("%s%d\n", "打开文件成功 文件描述符是", i);
-							return SUCCESS;
+							return SUC;
 						}
 					}
-					printf("打开文件数已达到最大，打开失败\n");
-					return SUCCESS;
+					return MAX_FILE_SIGNAL;
 				}
 				else //不是要打开的文件
 				{
@@ -205,6 +191,5 @@ int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("未找到目标文件，打开失败!\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }

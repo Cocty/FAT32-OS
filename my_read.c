@@ -1,17 +1,14 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 //读取文件最大长度为4098字节
 #define MAXLEN 4098
-int my_read(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char name[ARGLEN];
 	u32 start = 0;
 	/* 0为读取所有 */
 	u32 len = 0;
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能        读取文件内容\n\
 语法格式    read name [len[start]]\n\
@@ -21,9 +18,7 @@ start		读取的开始位置 默认为0\n";
 	FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 
 	if (arg->len == 3)
@@ -31,9 +26,7 @@ start		读取的开始位置 默认为0\n";
 		start = ctoi(arg->argv[2]);
 		if (start == INF)
 		{
-			strcpy(error.msg, "参数数量错误\n\x00");
-			printf("参数数量错误\n");
-			return ERROR;
+			return WRONG_PARANUM;
 		}
 	}
 	else if (arg->len == 2)
@@ -41,30 +34,31 @@ start		读取的开始位置 默认为0\n";
 		len = ctoi(arg->argv[1]);
 		if (len == INF)
 		{
-			strcpy(error.msg, "参数数量错误\n\x00");
-			printf("参数数量错误\n");
-			return ERROR;
+			return WRONG_PARANUM;
 		}
 	}
 	else if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+			if (nameCheckChange(arg->argv[0], name) == SUC)
 			{
-				read_sfn(fileSystemInfop, name, fat_ds, len, start);
+				return read_sfn(fileSystemInfop, name, fat_ds, len, start);
 			}
 			else
 			{
 				strcpy(name, arg->argv[0]);
-				read_lfn(fileSystemInfop, name, fat_ds, len, start);
+				return read_lfn(fileSystemInfop, name, fat_ds, len, start);
 			}
 		}
+	}
+	else if (arg->len == 0)
+	{
+		return WRONG_PARANUM;
 	}
 }
 
@@ -114,17 +108,15 @@ int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 							printf("%c", buf[i]);
 						}
 						printf("\n");
-						return SUCCESS;
+						return SUC;
 					}
 				}
-				printf("文件未打开\n");
-				return SUCCESS;
+				return FILE_NOTOPENED;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != 0 && pathNum != FAT_END);
-	printf("文件不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }
 
 int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start)
@@ -218,11 +210,10 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 								printf("%c", buf[i]);
 							}
 							printf("\n");
-							return SUCCESS;
+							return SUC;
 						}
 					}
-					printf("文件未打开\n");
-					return SUCCESS;
+					return FILE_NOTOPENED;
 				}
 				else //不是要打开的文件
 				{
@@ -236,8 +227,7 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("未找到目标文件，打开失败!\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }
 
 int read_real(int fnum, u32 start, u32 size, void *buf, FileSystemInfop fileSystemInfop)

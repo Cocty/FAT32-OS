@@ -50,7 +50,7 @@ int delfree(FileSystemInfop fsip, u32 num);
 
 /* 取得num簇的下一簇 返回下一簇编号 出错返回0*/
 u32 getNext(FileSystemInfop fsip, u32 num);
-/* 把输入的文件名转换为83明明格式的文件名 若文件名合法则返回SUCCESS否则返回ERROR */
+/* 把输入的文件名转换为83明明格式的文件名 若文件名合法则返回SUC否则返回ERROR */
 int nameCheckChange(const char name[ARGLEN], char name38[12]);
 
 //检查短目录项
@@ -67,6 +67,9 @@ void parsename(char *filename, char *new_filename);
 
 /*逆置字符串*/
 void reverseString(wchar_t *str, int length);
+
+/*将长度为11的文件名（文件名 空格 加扩展名）转变为文件名*/
+void findreal_filename(char *oldname, char *newname);
 
 /*判断是否重名，即创建文件时是否与当前目录下的某个文件重名*/
 int Is_repeat(char *name, FileSystemInfop fileSystemInfop, FAT_DS_BLOCK4K fat_ds);

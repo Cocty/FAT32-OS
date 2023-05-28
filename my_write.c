@@ -1,13 +1,9 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
-#include <math.h>
 
-int my_write(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_write(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        写入当前目录下的某个文件，以文件尾为结束\n\
 语法格式    write name type [offset]\n\
@@ -21,9 +17,7 @@ type        写入模式0截断 1追加 2覆盖\n\
     u32 offset = 0;
     if (fileSystemInfop->flag == FALSE)
     {
-        strcpy(error.msg, "未指定文件系统\n\x00");
-        printf("未指定文件系统\n");
-        return ERROR;
+        return NONE_FILESYS;
     }
 
     if (arg->len == 3)
@@ -32,9 +26,7 @@ type        写入模式0截断 1追加 2覆盖\n\
         type = ctoi(arg->argv[1]);
         if (type != 2 && offset == INF)
         {
-            strcpy(error.msg, "写入模式非法\n\x00");
-            printf("写入模式非法\n");
-            return ERROR;
+            return WRONG_WRITE_PATTERN;
         }
     }
     else if (arg->len == 2)
@@ -42,38 +34,33 @@ type        写入模式0截断 1追加 2覆盖\n\
         type = ctoi(arg->argv[1]);
         if (type != 0 && type != 1)
         {
-            strcpy(error.msg, "写入模式非法\n\x00");
-            printf("写入模式非法\n");
-            return ERROR;
+            return WRONG_WRITE_PATTERN;
         }
     }
     else if (arg->len == 1)
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return SUCCESS;
+            return HELP_STR;
         }
     }
     else if (arg->len == 0)
     {
-        printf("未输入文件名！\n");
+        return NULL_FILENAME;
     }
     else
     {
-        strcpy(error.msg, "参数数量错误\n\x00");
-        printf("参数数量错误\n");
-        return ERROR;
+        return WRONG_PARANUM;
     }
 
-    if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+    if (nameCheckChange(arg->argv[0], name) == SUC)
     {
-        write_sfn(fileSystemInfop, name, fat_ds, type, offset);
+        return write_sfn(fileSystemInfop, name, fat_ds, type, offset);
     }
     else
     {
         strcpy(name, arg->argv[0]);
-        write_lfn(fileSystemInfop, name, fat_ds, type, offset);
+        return write_lfn(fileSystemInfop, name, fat_ds, type, offset);
     }
 }
 
@@ -103,12 +90,10 @@ int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                     {
                         if (offset > fat_ds.fat[cut].DIR_FileSize)
                         {
-                            printf("覆盖位置非法\n");
-                            return SUCCESS;
+                            return WRONG_COVER_POS;
                         }
                         int num = 0;
                         char buf[ARGLEN * 10];
-                        printf("以EOF结束\n");
                         int first = 0;
                         int writelen = 0;
                         while (scanf("%c", &buf[num]) != EOF && buf[num] != 26)
@@ -124,17 +109,15 @@ int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                         clearerr(stdin);
                         write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
 
-                        return SUCCESS;
+                        return SUC;
                     }
                 }
-                printf("文件未打开\n");
-                return SUCCESS;
+                return FILE_NOTOPENED;
             }
         }
         pathNum = getNext(fileSystemInfop, pathNum);
     } while (pathNum != 0 && pathNum != FAT_END);
-    printf("文件不存在\n");
-    return SUCCESS;
+    return FILE_NOTFOUND;
 }
 
 int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int type, int offset)
@@ -210,12 +193,10 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                         {
                             if (offset > fat_ds.fat[cut].DIR_FileSize)
                             {
-                                printf("覆盖位置非法\n");
-                                return SUCCESS;
+                                return WRONG_COVER_POS;
                             }
                             int num = 0;
                             char buf[ARGLEN * 10];
-                            printf("以EOF结束\n");
                             int first = 0;
                             int writelen = 0;
                             while (scanf("%c", &buf[num]) != EOF && buf[num] != 26)
@@ -230,11 +211,10 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                             }
                             clearerr(stdin);
                             write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
-                            return SUCCESS;
+                            return SUC;
                         }
                     }
-                    printf("文件未打开\n");
-                    return SUCCESS;
+                    return FILE_NOTOPENED;
                 }
                 else //不是要写的文件
                 {
@@ -248,8 +228,7 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
         }
         pathNum = getNext(fileSystemInfop, pathNum);
     } while (pathNum != FAT_END && pathNum != 0);
-    printf("未找到目标文件，打开失败!\n");
-    return SUCCESS;
+    return FILE_NOTFOUND;
 }
 
 int write_in(int fnum, int type, u32 start, u32 size, void *buf, FileSystemInfop fileSystemInfop)

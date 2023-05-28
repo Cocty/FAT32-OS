@@ -1,14 +1,11 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 
-int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_close(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char name[ARGLEN];
 	FAT_DS_BLOCK4K fat_ds;
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能        关闭当前目录的某个文件\n\
 语法格式    close name\n\
@@ -16,40 +13,34 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop)
 	// FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+			if (nameCheckChange(arg->argv[0], name) == SUC)
 			{
-				close_sfn(fileSystemInfop, name, fat_ds);
+				return close_sfn(fileSystemInfop, name, fat_ds);
 			}
 			else
 			{
 				strcpy(name, arg->argv[0]);
-				close_lfn(fileSystemInfop, name, fat_ds);
+				return close_lfn(fileSystemInfop, name, fat_ds);
 			}
 		}
 	}
 	else if (arg->len == 0)
 	{
-		printf("文件名空\n");
-		return ERROR;
+		return NULL_FILENAME;
 	}
 	else
 	{
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
+		return WRONG_PARANUM;
 	}
 }
 
@@ -62,7 +53,7 @@ int close_in(int fnum, FileSystemInfop fileSystemInfop)
 	}
 	Opendfilep opendf = &(fileSystemInfop->Opendf[fnum]);
 	opendf->flag = FALSE;
-	return SUCCESS;
+	return SUC;
 }
 
 int close_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
@@ -93,17 +84,16 @@ int close_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
 					if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
 					{
 						close_in(i, fileSystemInfop);
-						return SUCCESS;
+						return SUC;
 					}
 				}
-				printf("文件未打开\n");
-				return SUCCESS;
+				return FILE_NOTOPENED;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_FREE && pathNum != FAT_END);
 
-	return SUCCESS;
+	return SUC;
 }
 
 int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
@@ -178,11 +168,10 @@ int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
 						if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
 						{
 							close_in(i, fileSystemInfop);
-							return SUCCESS;
+							return SUC;
 						}
 					}
-					printf("文件未打开\n");
-					return SUCCESS;
+					return FILE_NOTOPENED;
 				}
 				else //不是要打开的文件
 				{
@@ -196,6 +185,5 @@ int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("未找到目标文件，打开失败!\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }

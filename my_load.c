@@ -7,10 +7,10 @@
 #include "tool.h"
 #include <string.h>
 //打开文件但未关闭
-int my_load(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_load(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
     char fileName[ARGLEN] = "fs.vhd";
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        加载文件系统\n\
 语法格式    load [namefile]\n\
@@ -23,8 +23,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return SUCCESS;
+            return HELP_STR;
         }
         strcpy(fileName, arg->argv[0]);
     }
@@ -32,9 +31,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     fp = fopen(fileName, "rb+");
     if (fp == NULL)
     {
-        strcpy(error.msg, "文件打开错误\n\x00");
-        printf("文件打开量错误\n");
-        return ERROR;
+        return FILE_ERROR;
     }
     memset(fileSystemInfop, 0, sizeof(FileSystemInfo));
     fileSystemInfop->flag = TRUE;
@@ -78,13 +75,12 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     }
     if (bpb.end != 0xaa55)
     {
-        printf("这不是一个合法的文件系统!\n");
         fileSystemInfop->flag = FALSE;
-        return SUCCESS;
+        return WRONG_FILESYS;
     }
 
     DEBUG("%s 加载成功!\n", fileSystemInfop->fileName);
     DEBUG("根目录簇号 %d\n", fileSystemInfop->rootNum);
     DEBUG("FAT表位置（簇号） %d %d\n", fileSystemInfop->FAT[0], fileSystemInfop->FAT[1]);
-    return SUCCESS;
+    return SUC;
 }

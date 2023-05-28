@@ -1,12 +1,9 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 
-int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能        显示当前目录的文件文件夹\n\
 语法格式    dir\n\
@@ -14,22 +11,17 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 	FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			strcpy(error.msg, "参数数量错误\n\x00");
-			printf("参数数量错误\n");
-			return ERROR;
+			return WRONG_PARANUM;
 		}
 	}
 
@@ -134,8 +126,10 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 					//文件
 					filesize += fat_ds.fat[cut].DIR_FileSize;
 					file++;
-					printf("%6s %10d %8.8s %3.3s\n",
-						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, fat_ds.fat[cut].name, fat_ds.fat[cut].named);
+					char filename[8];
+					findreal_filename(fat_ds.fat[cut].name, filename);
+					printf("%6s %10d %s.%s\n",
+						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename, fat_ds.fat[cut].named);
 				}
 				cut++;
 			}
@@ -144,7 +138,7 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop)
 	} while (pathNum != FAT_END);
 	printf("%10d个文件   %10d字节\n", file, filesize);
 	printf("%10d个文件夹\n", attr);
-	return SUCCESS;
+	return SUC;
 }
 
 void reverseString(wchar_t *str, int length) //逆置字符串
@@ -161,4 +155,21 @@ void reverseString(wchar_t *str, int length) //逆置字符串
 		start++;
 		end--;
 	}
+}
+
+void findreal_filename(char *oldname, char *newname)
+{
+	int index = 0;
+	for (int i = 0; i < 8; i++)
+	{
+		if (oldname[i] != ' ')
+		{
+			newname[index++] = oldname[i];
+		}
+		else
+		{
+			break;
+		}
+	}
+	newname[index] = '\0';
 }

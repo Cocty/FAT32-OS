@@ -1,10 +1,9 @@
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
 
-int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        退出文件系统\n\
 语法格式    exit\n";
@@ -12,14 +11,11 @@ int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop)
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return ERROR;
+            return HELP_STR;
         }
         else
         {
-            strcpy(error.msg, "参数数量错误\n\x00");
-            printf("参数数量错误\n");
-            return ERROR;
+            return WRONG_PARANUM;
         }
     }
 
@@ -28,5 +24,5 @@ int my_exitsys(const ARGP arg, FileSystemInfop fileSystemInfop)
         fclose(fileSystemInfop->fp);
         memset(fileSystemInfop, 0, sizeof(FileSystemInfo));
     }
-    return SUCCESS;
+    return SUC;
 }

@@ -1,14 +1,12 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
+
 //暂时设定为只能删除当前目录下的文件,不包含非空目录
-int my_rm(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_rm(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char delname[ARGLEN];
 	FAT_DS_BLOCK4K fat_ds;
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能		删除文件\n\
 格式		rm name\n\
@@ -16,41 +14,35 @@ name	  想要删除的文件名\n";
 
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], delname) == SUCCESS)
+			if (nameCheckChange(arg->argv[0], delname) == SUC)
 			{
-				rm_sfn(fileSystemInfop, delname, fat_ds);
+				return rm_sfn(fileSystemInfop, delname, fat_ds);
 			}
 			else
 			{
 				strcpy(delname, arg->argv[0]);
-				rm_lfn(fileSystemInfop, delname, fat_ds);
+				return rm_lfn(fileSystemInfop, delname, fat_ds);
 			}
 		}
 	}
 	else if (arg->len == 0)
 	{
-		DEBUG("未输入文件名\n");
-		return ERROR;
+		return NULL_FILENAME;
 	}
 	else
 	{
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
+		return WRONG_PARANUM;
 	}
 }
 
@@ -80,8 +72,7 @@ int rm_sfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 					opendf = &(fileSystemInfop->Opendf[i]);
 					if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
 					{
-						printf("文件已打开不能删除\n");
-						return SUCCESS;
+						return FILEOPENED;
 					}
 				}
 				delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //找到该文件所在的起始簇号
@@ -91,13 +82,13 @@ int rm_sfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 				}
 				fat_ds.fat[cut].name[0] = '\xe5';
 				do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //回写当前簇号所在的物理簇
-				return SUCCESS;
+				return SUC;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("文件不存在\n");
-	return SUCCESS;
+
+	return FILE_NOTFOUND;
 }
 
 int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds)
@@ -169,8 +160,7 @@ int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 						opendf = &(fileSystemInfop->Opendf[i]);
 						if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, filename) == 0)
 						{
-							printf("文件已打开不能删除\n");
-							return SUCCESS;
+							return FILEOPENED;
 						}
 					}
 					delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //找到该文件所在的起始簇号
@@ -189,7 +179,7 @@ int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 					fat_ds.fat[cut].name[0] = '\xe5';														  //同时也标记短目录项的第一个字节为删除标志
 					do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //回写当前簇号所在的物理簇
 					cut++;
-					return SUCCESS;
+					return SUC;
 				}
 				else //不是要删除的文件
 				{
@@ -203,6 +193,5 @@ int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("文件不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }

@@ -1,9 +1,5 @@
 #include "fs.h"
 #include "tool.h"
-#include <assert.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 /* 存在随机根目录dir乱码 原因不明 */
 /*
     接受一个参数 不得小于256MB 不得大于2097152MB(2TB)
@@ -93,17 +89,16 @@ void BS_BPSset(BS_BPBp bs_bpb, int size, int hiden)
     bs_bpb->end = 0xAA55;
 }
 
-int my_format(const ARGP arg)
+int my_format(const ARGP arg, char **helpstr)
 {
     char fatName[8] = "WLt    ";
     char fileName[ARGLEN] = "fs.vhd";
-    const char helpstr[] = "\
+    *helpstr = "\
 功能         格式化文件系统\n\
 语法格式     format size [name [namefile]]\n\
 szie        磁盘大小 单位MB\n\
 name        卷标名  默认 WTL\n\
 namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n";
-    DEBUG("%d", sizeof(BS_BPB));
     BLOCK4K block4k;
     BLOCK block;
     FILE *fp = NULL;
@@ -119,33 +114,26 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return SUCCESS;
+            return HELP_STR;
         }
     }
     else
     {
-        strcpy(error.msg, "参数数量错误\n\x00");
-        printf("参数数量错误\n");
-        return ERROR;
+        return WRONG_PARANUM;
     }
 
     DEBUG("%s %d", arg->argv[0], ctoi(arg->argv[0]));
     int size = ctoi(arg->argv[0]);
     if (size < MIN || size > MAX)
     {
-        strcpy(error.msg, "磁盘容量量错误\n\x00");
-        printf("磁盘容量量错误\n");
-        return ERROR;
+        return WRONG_CAPACITY;
     }
     int cut = size * K * K / SPCSIZE;
     DEBUG("%d %d\n", sizeof(BLOCK), sizeof(BLOCK4K));
     fp = fopen(fileName, "wb");
     if (fp == NULL)
     {
-        strcpy(error.msg, "文件打开错误\n\x00");
-        printf("文件打开量错误\n");
-        return ERROR;
+        return FILE_ERROR;
     }
 
     int offset = 0;
@@ -227,7 +215,5 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     }
 
     fclose(fp);
-    DEBUG("磁盘申请成功\n");
-    // if()
-    return SUCCESS;
+    return SUC;
 }

@@ -1,8 +1,5 @@
-#include <stdio.h>
 #include "fs.h"
 #include "tool.h"
-#include <memory.h>
-#include <ctype.h>
 
 int isEmpty(FileSystemInfop fileSystemInfop, u32 pathNum)
 {
@@ -41,11 +38,11 @@ int isEmpty(FileSystemInfop fileSystemInfop, u32 pathNum)
 }
 
 //暂时设定为只能删除当前目录下的文件,不包含非空目录
-int my_rmdir(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_rmdir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char delname[ARGLEN];
 	FAT_DS_BLOCK4K fat_ds;
-	const char helpstr[] =
+	*helpstr =
 		"\
 功能		删除文件夹\n\
 格式		rm name\n\
@@ -53,42 +50,36 @@ name	  想要删除的文件夹名\n";
 
 	if (fileSystemInfop->flag == FALSE)
 	{
-		strcpy(error.msg, "未指定文件系统\n\x00");
-		printf("未指定文件系统\n");
-		return ERROR;
+		return NONE_FILESYS;
 	}
 
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
 		{
-			printf(helpstr);
-			return SUCCESS;
+			return HELP_STR;
 		}
 		else
 		{
-			if (nameCheck(arg->argv[0]) == SUCCESS)
+			if (nameCheck(arg->argv[0]) == SUC)
 			{
 				strcpy(delname, arg->argv[0]);
-				rm_sfn_dir(fileSystemInfop, delname, fat_ds);
+				return rm_sfn_dir(fileSystemInfop, delname, fat_ds);
 			}
 			else
 			{
 				strcpy(delname, arg->argv[0]);
-				rm_lfn_dir(fileSystemInfop, delname, fat_ds);
+				return rm_lfn_dir(fileSystemInfop, delname, fat_ds);
 			}
 		}
 	}
 	else if (arg->len == 0)
 	{
-		DEBUG("未输入目录名\n");
-		return ERROR;
+		return NULL_FILENAME;
 	}
 	else
 	{
-		strcpy(error.msg, "参数数量错误\n\x00");
-		printf("参数数量错误\n");
-		return ERROR;
+		return WRONG_PARANUM;
 	}
 }
 
@@ -161,10 +152,7 @@ int rm_lfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fa
 					delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //要删除的文件的起始簇号
 					if (isEmpty(fileSystemInfop, delfileNum) == FALSE)
 					{
-						//空判断
-						strcpy(error.msg, "文件夹非空\n\x00");
-						printf("文件夹非空\n");
-						return ERROR;
+						return DIR_NOT_NULL;
 					}
 					while (delfileNum != FAT_END && delfileNum != 0)
 					{
@@ -180,7 +168,7 @@ int rm_lfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fa
 					fat_ds.fat[cut].name[0] = '\xe5'; //同时将短目录项的第一个字节标记删除
 					do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 					cut++;
-					return SUCCESS;
+					return SUC;
 				}
 				else //不是要删除的文件
 				{
@@ -194,8 +182,7 @@ int rm_lfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fa
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("文件不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }
 
 int rm_sfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds)
@@ -224,9 +211,7 @@ int rm_sfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fa
 				if (isEmpty(fileSystemInfop, delfileNum) == FALSE)
 				{
 					//空判断
-					strcpy(error.msg, "文件夹非空\n\x00");
-					printf("文件夹非空\n");
-					return ERROR;
+					return DIR_NOT_NULL;
 				}
 				while (delfileNum != FAT_END && delfileNum != 0)
 				{
@@ -234,11 +219,10 @@ int rm_sfn_dir(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fa
 				}
 				fat_ds.fat[cut].name[0] = '\xe5';
 				do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
-				return SUCCESS;
+				return SUC;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
 	} while (pathNum != FAT_END && pathNum != 0);
-	printf("文件夹不存在\n");
-	return SUCCESS;
+	return FILE_NOTFOUND;
 }

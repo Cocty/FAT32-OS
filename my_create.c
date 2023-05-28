@@ -1,10 +1,9 @@
 #include "fs.h"
 #include "tool.h"
-#include <ctype.h>
 
-int my_create(const ARGP arg, FileSystemInfop fileSystemInfop)
+int my_create(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-    const char helpstr[] =
+    *helpstr =
         "\
 功能        创建文件\n\
 语法格式    create name\n\
@@ -14,43 +13,37 @@ name       创建文件的名字\n\
     FAT_DS_BLOCK4K fat_ds;
     if (fileSystemInfop->flag == FALSE)
     {
-        strcpy(error.msg, "未指定文件系统\n\x00");
-        printf("未指定文件系统\n");
-        return ERROR;
+        return NONE_FILESYS;
     }
     if (arg->len == 1)
     {
         if (strcmp(arg->argv[0], "/?") == 0)
         {
-            printf(helpstr);
-            return SUCCESS;
+            return HELP_STR;
         }
         else
         {
-            if (nameCheckChange(arg->argv[0], name) == SUCCESS)
+            if (nameCheckChange(arg->argv[0], name) == SUC)
             {
-                create_sfn(fileSystemInfop, name, fat_ds);
+                return create_sfn(fileSystemInfop, name, fat_ds);
             }
             else
             {
                 strcpy(name, arg->argv[0]);
                 if (Is_repeat(name, fileSystemInfop, fat_ds) != ERROR)
                 {
-                    create_lfn(fileSystemInfop, name, fat_ds);
+                    return create_lfn(fileSystemInfop, name, fat_ds);
                 }
             }
         }
     }
     else if (arg->len == 0)
     {
-        DEBUG("文件名空\n");
-        return ERROR;
+        return NULL_FILENAME;
     }
     else
     {
-        strcpy(error.msg, "参数数量错误\n\x00");
-        printf("参数数量错误\n");
-        return ERROR;
+        return WRONG_PARANUM;
     }
 }
 
@@ -73,9 +66,7 @@ int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
             }
             else if (strcmp(name, lin) == 0)
             {
-                strcpy(error.msg, "文件已存在\n\x00");
-                printf("文件已存在\n");
-                return ERROR;
+                return FILE_EXSIST;
             }
         }
         //取得下一个簇
@@ -89,9 +80,7 @@ int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
                 pathNum = newfree(fileSystemInfop, lin);
                 if (pathNum == 0)
                 {
-                    strcpy(error.msg, "磁盘空间不足\n\x00");
-                    printf("磁盘空间不足\n");
-                    return ERROR;
+                    return NOT_ENOUGHSPACE;
                 }
             }
         }
@@ -108,11 +97,10 @@ int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
 
             //在当前目录簇写入新建文件的目录项
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
-            DEBUG("创建成功\n");
             break;
         }
     }
-    return SUCCESS;
+    return SUC;
 }
 
 int create_lfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_ds)
@@ -134,9 +122,7 @@ int create_lfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
             }
             else if (strcmp(name, lin) == 0)
             {
-                strcpy(error.msg, "文件已存在\n\x00");
-                printf("文件已存在\n");
-                return ERROR;
+                return FILE_EXSIST;
             }
         }
         //取得下一个簇
@@ -150,9 +136,7 @@ int create_lfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
                 pathNum = newfree(fileSystemInfop, lin);
                 if (pathNum == 0)
                 {
-                    strcpy(error.msg, "磁盘空间不足\n\x00");
-                    printf("磁盘空间不足\n");
-                    return ERROR;
+                    return NOT_ENOUGHSPACE;
                 }
             }
         }
@@ -232,39 +216,8 @@ int create_lfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
             fat_ds.fat[cut + fdt_num].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
             //写入新建文件
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
-            DEBUG("创建成功\n");
+
             break;
         }
     }
-
-    // #ifdef DEBUG
-    //     // 输出拆分后的长文件名目录项
-    //     for (int i = 0; i < fdt_num; i++)
-    //     {
-    //         printf("目录项 %d: ", i + 1);
-    //         printf("LDIR_Ord: %02x, ", lfn_term[i].LDIR_Ord);
-    //         printf("LDIR_Name1: ");
-    //         for (int j = 0; j < 5; j++)
-    //         {
-    //             printf("%04X ", lfn_term[i].LDIR_Name1[j]);
-    //         }
-    //         printf(", ");
-    //         printf("LDIR_Attr: %02X, ", lfn_term[i].LDIR_Attr);
-    //         printf("LDIR_Type: %02X, ", lfn_term[i].LDIR_Type);
-    //         printf("LDIR_Chksum: %02X, ", lfn_term[i].LDIR_Chksum);
-    //         printf("LDIR_Name2: ");
-    //         for (int j = 0; j < 6; j++)
-    //         {
-    //             printf("%04X ", lfn_term[i].LDIR_Name2[j]);
-    //         }
-    //         printf(", ");
-    //         printf("LDIR_FstClusLO: %04X, ", lfn_term[i].LDIR_FstClusLO);
-    //         printf("LDIR_Name3: ");
-    //         for (int j = 0; j < 2; j++)
-    //         {
-    //             printf("%04X ", lfn_term[i].LDIR_Name3[j]);
-    //         }
-    //         printf("\n");
-    //     }
-    // #endif
 }
