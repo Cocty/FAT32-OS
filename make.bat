@@ -1,1 +1,1 @@
-gcc -finput-charset=UTF-8 -fexec-charset=GBK  -g -W -std=c99 main.c kernel/libFat32.lib -o main.exe
+gcc -finput-charset=UTF-8 -fexec-charset=GBK  -g -W main.c kernel/libFat32.lib -o main.exe

@@ -3,7 +3,7 @@
 
 int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-	char name[12];
+	char name[ARGLEN];
 	*helpstr =
 		"\
 功能        进入文件夹\n\
@@ -56,6 +56,11 @@ int cd_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 			char lin[12];
 			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
+			if (fat_ds.fat[cut].name[0] == '\xe5')
+			{
+				//被删除的
+				continue;
+			}
 			if ((fat_ds.fat[cut].DIR_Attr & ATTR_DIRECTORY) && strcmp(name, lin) == 0)
 			{
 				fileSystemInfop->pathNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO);
@@ -112,7 +117,13 @@ int cd_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 	{
 		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 		while (cut < SPCSIZE / 32)
-		{													//遍历每个目录项
+		{ //遍历每个目录项
+			if (fat_ds.fat[cut].name[0] == '\xe5')
+			{
+				cut++;
+				//被删除的
+				continue;
+			}
 			if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
 			{
 				Longfile_termp long_file_term = (Longfile_termp)&fat_ds.fat[cut];
