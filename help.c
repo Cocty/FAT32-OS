@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "fs.h"
 int my_help(char **help_str)
 {

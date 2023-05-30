@@ -94,6 +94,7 @@ int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
             fat_ds.fat[cut].DIR_Attr = ATTR_ARCHIVE;
             fat_ds.fat[cut].DIR_FstClusHI = (u16)(pathnumd >> 16);
             fat_ds.fat[cut].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
+            setCreationTime(&fat_ds.fat[cut]);
 
             //在当前目录簇写入新建文件的目录项
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
@@ -214,6 +215,7 @@ int create_lfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
             fat_ds.fat[cut + fdt_num].DIR_Attr = ATTR_ARCHIVE;
             fat_ds.fat[cut + fdt_num].DIR_FstClusHI = (u16)(pathnumd >> 16);
             fat_ds.fat[cut + fdt_num].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
+            setCreationTime(&fat_ds.fat[cut + fdt_num]);
             //写入新建文件
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 

@@ -108,6 +108,8 @@ int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 							printf("%c", buf[i]);
 						}
 						printf("\n");
+						setLastAccessTime(&fat_ds.fat[cut]);
+						do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 						return SUC;
 					}
 				}
@@ -210,6 +212,8 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 								printf("%c", buf[i]);
 							}
 							printf("\n");
+							setLastAccessTime(&fat_ds.fat[cut]);
+							do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 							return SUC;
 						}
 					}

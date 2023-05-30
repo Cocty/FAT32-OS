@@ -100,15 +100,52 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 					//文件
 					filesize += fat_ds.fat[cut].DIR_FileSize;
 					file++;
-					printf("%6s %10d %s\n",
-						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename);
+					char creation_date[ARGLEN];
+					char creation_time[ARGLEN];
+					char write_date[ARGLEN];
+					char write_time[ARGLEN];
+					char access_date[ARGLEN];
+
+					sprintf(creation_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_CrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_CrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_CrtDate & 0x001F);
+					sprintf(creation_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_CrtTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_CrtTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_CrtTime & 0x001F) << 1);
+					strcat(creation_date, creation_time);
+
+					sprintf(write_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_WrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_WrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_WrtDate & 0x001F);
+					sprintf(write_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_WriTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_WriTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_WriTime & 0x001F) << 1);
+					strcat(write_date, write_time);
+
+					sprintf(access_date, "%04d-%02d-%02d", ((fat_ds.fat[cut].DIR_LastAccDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_LastAccDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_LastAccDate & 0x001F);
+
+					printf("%6s %10d %s %10s %20s %10s %20s %10s %10s\n",
+						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename, "创建时间:", creation_date, "最后写入时间:", write_date, "最后访问日期:", access_date);
 				}
 				else if (fat_ds.fat[cut].DIR_Attr & ATTR_DIRECTORY)
 				{
 					//目录
 					attr++;
-					printf("%6s %10s %s\n",
-						   "<DIR>", "", filename);
+					char creation_date[ARGLEN];
+					char creation_time[ARGLEN];
+					char write_date[ARGLEN];
+					char write_time[ARGLEN];
+					char access_date[ARGLEN];
+
+					sprintf(creation_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_CrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_CrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_CrtDate & 0x001F);
+					sprintf(creation_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_CrtTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_CrtTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_CrtTime & 0x001F) << 1);
+					strcat(creation_date, creation_time);
+
+					sprintf(write_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_WrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_WrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_WrtDate & 0x001F);
+					sprintf(write_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_WriTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_WriTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_WriTime & 0x001F) << 1);
+					strcat(write_date, write_time);
+
+					sprintf(access_date, "%04d-%02d-%02d", ((fat_ds.fat[cut].DIR_LastAccDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_LastAccDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_LastAccDate & 0x001F);
+					printf("%6s %10s %s %10s %20s %10s %20s %10s %10s\n",
+						   "<DIR>", "", filename, "创建时间:", creation_date, "最后写入时间:", write_date, "最后访问日期:", access_date);
 				}
 				cut++;
 			}
@@ -118,8 +155,27 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 				{
 					//目录
 					attr++;
-					printf("%6s %10s %8.8s%3.3s\n",
-						   "<DIR>", "", fat_ds.fat[cut].name, fat_ds.fat[cut].named);
+					char creation_date[ARGLEN];
+					char creation_time[ARGLEN];
+					char write_date[ARGLEN];
+					char write_time[ARGLEN];
+					char access_date[ARGLEN];
+
+					sprintf(creation_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_CrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_CrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_CrtDate & 0x001F);
+					sprintf(creation_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_CrtTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_CrtTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_CrtTime & 0x001F) << 1);
+					strcat(creation_date, creation_time);
+
+					sprintf(write_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_WrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_WrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_WrtDate & 0x001F);
+					sprintf(write_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_WriTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_WriTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_WriTime & 0x001F) << 1);
+					strcat(write_date, write_time);
+
+					sprintf(access_date, "%04d-%02d-%02d", ((fat_ds.fat[cut].DIR_LastAccDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_LastAccDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_LastAccDate & 0x001F);
+
+					printf("%6s %10s %8.8s%3.3s %10s %20s %10s %20s %10s %10s\n",
+						   "<DIR>", "", fat_ds.fat[cut].name, fat_ds.fat[cut].named, "创建时间:", creation_date, "最后写入时间:", write_date, "最后访问日期:", access_date);
 				}
 				else if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE))
 				{
@@ -128,8 +184,27 @@ int my_dir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 					file++;
 					char filename[8];
 					findreal_filename(fat_ds.fat[cut].name, filename);
-					printf("%6s %10d %s.%s\n",
-						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename, fat_ds.fat[cut].named);
+					char creation_date[ARGLEN];
+					char creation_time[ARGLEN];
+					char write_date[ARGLEN];
+					char write_time[ARGLEN];
+					char access_date[ARGLEN];
+
+					sprintf(creation_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_CrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_CrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_CrtDate & 0x001F);
+					sprintf(creation_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_CrtTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_CrtTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_CrtTime & 0x001F) << 1);
+					strcat(creation_date, creation_time);
+
+					sprintf(write_date, "%04d-%02d-%02d/", ((fat_ds.fat[cut].DIR_WrtDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_WrtDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_WrtDate & 0x001F);
+					sprintf(write_time, "%02d:%02d:%02d", (fat_ds.fat[cut].DIR_WriTime & 0xF800) >> 11, (fat_ds.fat[cut].DIR_WriTime & 0x07E0) >> 5, (fat_ds.fat[cut].DIR_WriTime & 0x001F) << 1);
+					strcat(write_date, write_time);
+
+					sprintf(access_date, "%04d-%02d-%02d", ((fat_ds.fat[cut].DIR_LastAccDate & 0xFE00) >> 9) + 1980, (fat_ds.fat[cut].DIR_LastAccDate & 0x01E0) >> 5,
+							fat_ds.fat[cut].DIR_LastAccDate & 0x001F);
+
+					printf("%6s %10d %s.%s %10s %20s %10s %20s %10s %10s\n",
+						   "<FILE>", fat_ds.fat[cut].DIR_FileSize, filename, fat_ds.fat[cut].named, "创建时间:", creation_date, "最后写入时间:", write_date, "最后访问日期:", access_date);
 				}
 				cut++;
 			}

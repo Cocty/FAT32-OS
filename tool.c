@@ -1,9 +1,9 @@
-#include "fs.h"
 #include "tool.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 int do_write_block4k(FILE *fp, BLOCK4K *block4k, int offset)
 {
@@ -415,4 +415,63 @@ int Is_repeat(char *name, FileSystemInfop fileSystemInfop, FAT_DS_BLOCK4K fat_ds
         pathNum = getNext(fileSystemInfop, pathNum); //取下一个簇
     } while (pathNum != FAT_END);
     return SUC;
+}
+void setCreationTime(FAT_DSp file)
+{
+    time_t create;
+    time_t current_time = time(&create);
+    struct tm *tm_info = localtime(&current_time);
+
+    int year = tm_info->tm_year + 1900;
+    int month = tm_info->tm_mon + 1;
+    int day = tm_info->tm_mday;
+    int hour = tm_info->tm_hour;
+    int minute = tm_info->tm_min;
+    int second = tm_info->tm_sec;
+    int milliseconds = 0; // 假设毫秒部分为0
+
+    // 设置创建时间和日期
+    file->DIR_CrtTime = ((hour & 0x1F) << 11) | ((minute & 0x3F) << 5) | ((second & 0x1F) >> 1);
+    file->DIR_CrtDate = ((year - 1980) << 9) | (month << 5) | day;
+    file->DIR_CrtTimeTeenth = (milliseconds / 10) & 0x1F; //10毫秒位
+
+    // 设置最近修改时间和日期
+    file->DIR_WriTime = file->DIR_CrtTime;
+    file->DIR_WrtDate = file->DIR_CrtDate;
+
+    // 设置最后访问日期
+    file->DIR_LastAccDate = file->DIR_CrtDate;
+}
+
+void setLastWriteTime(FAT_DSp file)
+{
+    time_t write;
+    time_t current_time = time(&write);
+    struct tm *tm_info = localtime(&current_time);
+
+    int year = tm_info->tm_year + 1900;
+    int month = tm_info->tm_mon + 1;
+    int day = tm_info->tm_mday;
+    int hour = tm_info->tm_hour;
+    int minute = tm_info->tm_min;
+    int second = tm_info->tm_sec;
+
+    // 设置最近修改时间和日期
+    file->DIR_WriTime = ((hour & 0x1F) << 11) | ((minute & 0x3F) << 5) | ((second & 0x1F) >> 1);
+    file->DIR_WrtDate = ((year - 1980) << 9) | (month << 5) | day;
+}
+
+void setLastAccessTime(FAT_DSp file)
+{
+    time_t access;
+    time_t current_time = time(&access);
+    struct tm *tm_info = localtime(&current_time);
+    int year = tm_info->tm_year + 1900;
+    int month = tm_info->tm_mon + 1;
+    int day = tm_info->tm_mday;
+    int hour = tm_info->tm_hour;
+    int minute = tm_info->tm_min;
+    int second = tm_info->tm_sec;
+    // 设置最后访问日期
+    file->DIR_LastAccDate = ((year - 1980) << 9) | (month << 5) | day;
 }

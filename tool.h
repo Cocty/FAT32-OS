@@ -70,7 +70,10 @@ void reverseString(wchar_t *str, int length);
 
 /*将长度为11的文件名（文件名 空格 加扩展名）转变为文件名*/
 void findreal_filename(char *oldname, char *newname);
-
+/*设置时间*/
+void setCreationTime(FAT_DSp file);
+void setLastAccessTime(FAT_DSp file);
+void setLastWriteTime(FAT_DSp file);
 /*判断是否重名，即创建文件时是否与当前目录下的某个文件重名*/
 int Is_repeat(char *name, FileSystemInfop fileSystemInfop, FAT_DS_BLOCK4K fat_ds);
 

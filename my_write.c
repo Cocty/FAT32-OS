@@ -92,6 +92,8 @@ int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                         {
                             return WRONG_COVER_POS;
                         }
+                        setLastWriteTime(&fat_ds.fat[cut]);
+                        do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
                         int num = 0;
                         char buf[ARGLEN * 10];
                         int first = 0;
@@ -199,6 +201,9 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                             char buf[ARGLEN * 10];
                             int first = 0;
                             int writelen = 0;
+                            setLastWriteTime(&fat_ds.fat[cut]);
+                            do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
+
                             while (scanf("%c", &buf[num]) != EOF && buf[num] != 26)
                             {
                                 num++;
@@ -211,6 +216,7 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                             }
                             clearerr(stdin);
                             write_in(i, type, offset + writelen, num, (void *)buf, fileSystemInfop);
+
                             return SUC;
                         }
                     }

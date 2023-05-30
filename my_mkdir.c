@@ -109,6 +109,7 @@ int create_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             fat_ds.fat[cut].DIR_FstClusHI = (u16)(pathnumd >> 16);
             fat_ds.fat[cut].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
             fat_ds.fat[cut].DIR_Attr = ATTR_DIRECTORY;
+            setCreationTime(&fat_ds.fat[cut]);
 
             //写入新建目录
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
@@ -244,6 +245,7 @@ int create_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K f
             fat_ds.fat[cut + fdt_num].DIR_Attr = ATTR_DIRECTORY;
             fat_ds.fat[cut + fdt_num].DIR_FstClusHI = (u16)(pathnumd >> 16);
             fat_ds.fat[cut + fdt_num].DIR_FstClusLO = (u16)(pathnumd & 0x0000ffff);
+            setCreationTime(&fat_ds.fat[cut + fdt_num]);
 
             do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //在当前目录下写入新建目录
             DEBUG("创建成功\n");
