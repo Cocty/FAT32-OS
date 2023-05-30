@@ -1,22 +1,20 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 
-//暂时设定为只能删除当前目录下的文件,不包含非空目录
-int my_rm(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
+int my_close(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
-	char delname[ARGLEN];
+	char name[ARGLEN];
 	FAT_DS_BLOCK4K fat_ds;
 	*helpstr =
 		"\
-功能		删除文件\n\
-格式		rm name\n\
-name	  想要删除的文件名\n";
-
+功能        关闭当前目录的某个文件\n\
+语法格式    close name\n\
+		   \n";
+	// FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
 		return NONE_FILESYS;
 	}
-
 	if (arg->len == 1)
 	{
 		if (strcmp(arg->argv[0], "/?") == 0)
@@ -25,14 +23,14 @@ name	  想要删除的文件名\n";
 		}
 		else
 		{
-			if (nameCheckChange(arg->argv[0], delname) == SUC)
+			if (nameCheckChange(arg->argv[0], name) == SUC)
 			{
-				return rm_sfn(fileSystemInfop, delname, fat_ds);
+				return close_sfn(fileSystemInfop, name, fat_ds);
 			}
 			else
 			{
-				strcpy(delname, arg->argv[0]);
-				return rm_lfn(fileSystemInfop, delname, fat_ds);
+				strcpy(name, arg->argv[0]);
+				return close_lfn(fileSystemInfop, name, fat_ds);
 			}
 		}
 	}
@@ -46,56 +44,62 @@ name	  想要删除的文件名\n";
 	}
 }
 
-int rm_sfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds)
+int close_in(int fnum, FileSystemInfop fileSystemInfop)
 {
+	/* 文件描述符非法 */
+	if (fnum < 0 && fnum >= OPENFILESIZE)
+	{
+		return ERROR;
+	}
+	Opendfilep opendf = &(fileSystemInfop->Opendf[fnum]);
+	opendf->flag = FALSE;
+	return SUC;
+}
+
+int close_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
+{
+
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
-	u32 delfileNum;
 	Opendfilep opendf;
 	do
 	{
-		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号所在的物理簇
+		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 		for (cut = 0; cut < SPCSIZE / 32; cut++)
-		{ //遍历每个目录项
-			char name[12];
-			strncpy(name, fat_ds.fat[cut].name, 11);
-			name[11] = '\0';
+		{
+			char lin[12];
+			strncpy(lin, fat_ds.fat[cut].name, 11);
+			lin[11] = '\0';
 			if (fat_ds.fat[cut].name[0] == '\xe5')
 			{
 				//被删除的
 				continue;
 			}
-			if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) && strcmp(delname, name) == 0) // 找到了被删除的文件
+			if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) && strcmp(lin, name) == 0)
 			{
+				//文件
 				for (int i = 0; i < OPENFILESIZE; i++)
 				{
 					opendf = &(fileSystemInfop->Opendf[i]);
 					if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
 					{
-						return FILEOPENED;
+						close_in(i, fileSystemInfop);
+						return SUC;
 					}
 				}
-				delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //找到该文件所在的起始簇号
-				while (delfileNum != FAT_END && delfileNum != 0)
-				{
-					delfileNum = delfree(fileSystemInfop, delfileNum);
-				}
-				fat_ds.fat[cut].name[0] = '\xe5';
-				do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //回写当前簇号所在的物理簇
-				return SUC;
+				return FILE_NOTOPENED;
 			}
 		}
 		pathNum = getNext(fileSystemInfop, pathNum);
-	} while (pathNum != FAT_END && pathNum != 0);
+	} while (pathNum != FAT_FREE && pathNum != FAT_END);
 
-	return FILE_NOTFOUND;
+	return SUC;
 }
 
-int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds)
+int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 {
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
-	u32 delfileNum;
 	Opendfilep opendf;
 	do
 	{
@@ -103,13 +107,16 @@ int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 		cut = 0;
 		while (cut < SPCSIZE / 32)
 		{ //遍历每个目录项
+			char lin[12];
+			strncpy(lin, fat_ds.fat[cut].name, 11);
+			lin[11] = '\0';
 			if (fat_ds.fat[cut].name[0] == '\xe5')
 			{
-				//被删除的
 				cut++;
+				//被删除的
 				continue;
 			}
-			else if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
+			if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
 			{
 				//开始获取长文件名
 				Longfile_termp long_file_term = (Longfile_termp)&fat_ds.fat[cut];
@@ -153,35 +160,21 @@ int rm_lfn(FileSystemInfop fileSystemInfop, char *delname, FAT_DS_BLOCK4K fat_ds
 
 				cut += length; //此时现在指针指向了紧挨着的短文件名目录项
 
-				if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) && strcmp(delname, filename) == 0) // 找到了被删除的文件
+				if ((fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE) && strcmp(filename, name) == 0)
 				{
+					//文件
 					for (int i = 0; i < OPENFILESIZE; i++)
 					{
 						opendf = &(fileSystemInfop->Opendf[i]);
-						if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, filename) == 0)
+						if (pathNum == opendf->Dir_Clus && opendf->flag == TRUE && strcmp(opendf->File_name, name) == 0)
 						{
-							return FILEOPENED;
+							close_in(i, fileSystemInfop);
+							return SUC;
 						}
 					}
-					delfileNum = (u32)((((u32)fat_ds.fat[cut].DIR_FstClusHI) << 16) | (u32)fat_ds.fat[cut].DIR_FstClusLO); //找到该文件所在的起始簇号
-					while (delfileNum != FAT_END && delfileNum != 0)
-					{
-						delfileNum = delfree(fileSystemInfop, delfileNum);
-					}
-
-					long_file_term--; //首先退回到长目录项的最后一个
-					for (int i = length - 1; i >= 0; i--)
-					{
-						long_file_term->LDIR_Ord = '\xe5';
-						long_file_term--;
-					}
-					long_file_term = NULL;
-					fat_ds.fat[cut].name[0] = '\xe5';														  //同时也标记短目录项的第一个字节为删除标志
-					do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //回写当前簇号所在的物理簇
-					cut++;
-					return SUC;
+					return FILE_NOTOPENED;
 				}
-				else //不是要删除的文件
+				else //不是要打开的文件
 				{
 					cut += 2; //目录项指针指向下一个目录项（要跳过长文件名的短目录项）
 				}

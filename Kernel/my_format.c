@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 /* 存在随机根目录dir乱码 原因不明 */
 /*
     接受一个参数 不得小于256MB 不得大于2097152MB(2TB)

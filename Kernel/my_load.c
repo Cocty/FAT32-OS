@@ -3,8 +3,8 @@
     返回必要参数
     接受 虚拟磁盘名称
 */
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 #include <string.h>
 //打开文件但未关闭
 int my_load(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)

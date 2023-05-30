@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 int my_open(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
 	char name[ARGLEN];

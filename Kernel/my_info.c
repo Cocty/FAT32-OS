@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
     *helpstr =
