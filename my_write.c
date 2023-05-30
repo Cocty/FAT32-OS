@@ -93,6 +93,7 @@ int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
                             return WRONG_COVER_POS;
                         }
                         setLastWriteTime(&fat_ds.fat[cut]);
+
                         do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
                         int num = 0;
                         char buf[ARGLEN * 10];
@@ -138,6 +139,7 @@ int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
             lin[11] = '\0';
             if (fat_ds.fat[cut].name[0] == '\xE5' || fat_ds.fat[cut].name[0] == '\x00')
             {
+                cut++;
                 continue;
             }
 

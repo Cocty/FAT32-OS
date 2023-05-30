@@ -56,6 +56,11 @@ int open_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 			char lin[12];
 			strncpy(lin, fat_ds.fat[cut].name, 11);
 			lin[11] = '\0';
+			if (fat_ds.fat[cut].name[0] == '\xe5')
+			{
+				//被删除的
+				continue;
+			}
 
 			if (strcmp(lin, name) == 0 && (fat_ds.fat[cut].DIR_Attr & ATTR_ARCHIVE)) //找到了要打开的文件
 			{
@@ -81,8 +86,7 @@ int open_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 						opendfp->writep = 0;
 						opendfp->numID = cut;
 						strcpy(opendfp->File_name, name);
-						printf("%s%d\n", "打开文件成功 文件描述符是", i);
-						return SUC;
+						return i;
 					}
 				}
 				return MAX_FILE_SIGNAL;
@@ -104,7 +108,13 @@ int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum)); //读取当前簇号所在的物理簇
 		cut = 0;
 		while (cut < SPCSIZE / 32)
-		{													//遍历每个目录项
+		{ //遍历每个目录项
+			if (fat_ds.fat[cut].name[0] == '\xe5')
+			{
+				cut++;
+				//被删除的
+				continue;
+			}
 			if (fat_ds.fat[cut].DIR_Attr == ATTR_LONG_NAME) //表示是长文件名目录项
 			{
 				//开始获取长文件名
@@ -173,8 +183,7 @@ int open_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds)
 							opendfp->writep = 0;
 							opendfp->numID = cut;
 							strcpy(opendfp->File_name, name);
-							printf("%s%d\n", "打开文件成功 文件描述符是", i);
-							return SUC;
+							return i;
 						}
 					}
 					return MAX_FILE_SIGNAL;

@@ -1,8 +1,7 @@
 #include "fs.h"
 #include "tool.h"
-//读取文件最大长度为4098字节
-#define MAXLEN 4098
-int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
+
+int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr, char content[])
 {
 	char name[ARGLEN];
 	u32 start = 0;
@@ -47,12 +46,12 @@ start		读取的开始位置 默认为0\n";
 		{
 			if (nameCheckChange(arg->argv[0], name) == SUC)
 			{
-				return read_sfn(fileSystemInfop, name, fat_ds, len, start);
+				return read_sfn(fileSystemInfop, name, fat_ds, len, start, content);
 			}
 			else
 			{
 				strcpy(name, arg->argv[0]);
-				return read_lfn(fileSystemInfop, name, fat_ds, len, start);
+				return read_lfn(fileSystemInfop, name, fat_ds, len, start, content);
 			}
 		}
 	}
@@ -62,11 +61,12 @@ start		读取的开始位置 默认为0\n";
 	}
 }
 
-int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start)
+int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start, char content[])
 {
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
 	Opendfilep opendf;
+	u32 index = 0;
 	do
 	{
 		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
@@ -99,15 +99,17 @@ int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 							readlen += read_real(i, start + readlen, ARGLEN * 10, (void *)buf, fileSystemInfop);
 							for (int i = 0; i < ARGLEN * 10; i++)
 							{
-								printf("%c", buf[i]);
+								// printf("%c", buf[i]);
+								content[index++] = buf[i];
 							}
 						}
 						int lin = read_real(i, start + readlen, len - readlen, (void *)buf, fileSystemInfop);
 						for (int i = 0; i < lin; i++)
 						{
-							printf("%c", buf[i]);
+							// printf("%c", buf[i]);
+							content[index++] = buf[i];
 						}
-						printf("\n");
+						// printf("\n");
 						setLastAccessTime(&fat_ds.fat[cut]);
 						do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 						return SUC;
@@ -121,7 +123,7 @@ int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 	return FILE_NOTFOUND;
 }
 
-int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start)
+int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start, char content[])
 {
 	u32 pathNum = fileSystemInfop->pathNum;
 	u32 cut;
@@ -137,6 +139,7 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 			lin[11] = '\0';
 			if (fat_ds.fat[cut].name[0] == '\xe5')
 			{
+				cut++;
 				//被删除的
 				continue;
 			}
@@ -194,6 +197,7 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 						{
 							char buf[ARGLEN * 10];
 							int readlen = 0;
+							u32 index = 0;
 							if (len == 0)
 							{
 								len = fat_ds.fat[cut].DIR_FileSize;
@@ -203,15 +207,17 @@ int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds,
 								readlen += read_real(i, start + readlen, ARGLEN * 10, (void *)buf, fileSystemInfop);
 								for (int i = 0; i < ARGLEN * 10; i++)
 								{
-									printf("%c", buf[i]);
+									// printf("%c", buf[i]);
+									content[index++] = buf[i];
 								}
 							}
 							int lin = read_real(i, start + readlen, len - readlen, (void *)buf, fileSystemInfop);
 							for (int i = 0; i < lin; i++)
 							{
-								printf("%c", buf[i]);
+								// printf("%c", buf[i]);
+								content[index++] = buf[i];
 							}
-							printf("\n");
+							// printf("\n");
 							setLastAccessTime(&fat_ds.fat[cut]);
 							do_write_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
 							return SUC;

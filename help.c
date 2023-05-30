@@ -16,6 +16,7 @@ open      打开文件\n\
 close     关闭文件\n\
 write     写文件\n\
 read      读文件\n\
+rename    重命名文件\n\
 help      显示提示\n\
 info      显示文件系统的信息\n\
 \n";

@@ -112,6 +112,7 @@ int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
 			lin[11] = '\0';
 			if (fat_ds.fat[cut].name[0] == '\xe5')
 			{
+				cut++;
 				//被删除的
 				continue;
 			}

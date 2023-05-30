@@ -257,6 +257,10 @@ int main()
             {
                 printf("打开文件数量达到最大\n");
             }
+            else
+            {
+                printf("%s%d\n", "打开文件成功 文件描述符是", value);
+            }
         }
         else if (strcmp(cmd, "close") == 0)
         {
@@ -324,7 +328,8 @@ int main()
         }
         else if (strcmp(cmd, "read") == 0)
         {
-            value = my_read(&argv, &fileSysInfo, &helpstr);
+            char content[ARGLEN * 100];
+            value = my_read(&argv, &fileSysInfo, &helpstr, content);
             if (value == HELP_STR)
             {
                 printf(helpstr);
@@ -349,6 +354,15 @@ int main()
             {
                 printf("文件未打开\n");
             }
+            else
+            {
+                for (int i = 0; i < strlen(content); i++)
+                {
+                    printf("%c", content[i]);
+                }
+                printf("\n");
+            }
+            content[0] = '\0';
         }
         else if (strcmp(cmd, "exit") == 0)
         {
@@ -389,6 +403,34 @@ int main()
             else if (value == WRONG_INPUT)
             {
                 printf("输入错误\n");
+            }
+        }
+        else if (strcmp(cmd, "rename") == 0)
+        {
+            value = my_rename(&argv, &fileSysInfo, &helpstr);
+            if (value == HELP_STR)
+            {
+                printf(helpstr);
+            }
+            else if (value == WRONG_PARANUM)
+            {
+                printf("参数数量错误！\n");
+            }
+            else if (value == NONE_FILESYS)
+            {
+                printf("未加载文件系统！\n");
+            }
+            else if (value == FILE_NOTFOUND)
+            {
+                printf("未找到文件\n");
+            }
+            else if (value == NULL_FILENAME)
+            {
+                printf("未输入文件名\n");
+            }
+            else if (value == FILE_EXSIST)
+            {
+                printf("重命名之后的文件重名\n");
             }
         }
         else

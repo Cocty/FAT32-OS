@@ -7,8 +7,7 @@ int my_create(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
         "\
 功能        创建文件\n\
 语法格式    create name\n\
-name       创建文件的名字\n\
-备注       文件名强制转为大写，文件名要符合三八命名方式\n";
+name       创建文件的名字\n";
     char name[ARGLEN];
     FAT_DS_BLOCK4K fat_ds;
     if (fileSystemInfop->flag == FALSE)

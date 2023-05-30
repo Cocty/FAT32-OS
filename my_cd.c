@@ -8,8 +8,7 @@ int my_cd(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 		"\
 功能        进入文件夹\n\
 语法格式    cd name\n\
-name       进入文件夹的名字\n\
-备注       文件名强制转为大写，文件名最长不超过8位\n";
+name       进入文件夹的名字\n\n";
 	FAT_DS_BLOCK4K fat_ds;
 	if (fileSystemInfop->flag == FALSE)
 	{
@@ -52,7 +51,7 @@ int cd_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_d
 	do
 	{
 		do_read_block4k(fileSystemInfop->fp, (BLOCK4K *)&fat_ds, L2R(fileSystemInfop, pathNum));
-		for (cut = 0; cut < SPCSIZE / 32; cut++)
+		for (cut = 0; cut < SPCSIZE / 32; cut++) //遍历每个目录项
 		{
 			char lin[12];
 			strncpy(lin, fat_ds.fat[cut].name, 11);

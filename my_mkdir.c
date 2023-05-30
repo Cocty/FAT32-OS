@@ -7,8 +7,7 @@ int my_mkdir(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
         "\
 功能        创建文件夹\n\
 语法格式    mkdir name\n\
-name       创建文件夹的名字\n\
-备注       文件名强制转为大写，文件名最长不超过8位\n";
+name       创建文件夹的名字\n";
     char name[ARGLEN];
     FAT_DS_BLOCK4K fat_ds;
     if (fileSystemInfop->flag == FALSE)

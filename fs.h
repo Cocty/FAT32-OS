@@ -353,10 +353,12 @@ int my_close(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /* 用户使用的文件写 */
 int my_write(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 /*  程序使用的文件读*/
-int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
+int my_read(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr, char content[]);
 
 //显示文件系统信息
 int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
+//重命名文件
+int my_rename(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr);
 
 /* 程序用关闭 fnum为文件描述符 */
 int close_in(int fnum, FileSystemInfop fileSystemInfop);
@@ -409,11 +411,15 @@ int close_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds
 int write_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int type, int offset);
 int write_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int type, int offset);
 /*读文件*/
-int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start);
-int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start);
+int read_sfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start, char content[]);
+int read_lfn(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds, int len, int start, char content[]);
 
 /*进入文件夹*/
 int cd_sfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
 int cd_lfn_dir(FileSystemInfop fileSystemInfop, char *name, FAT_DS_BLOCK4K fat_ds);
+
+/*重命名文件*/
+int rename_sfn(FileSystemInfop fileSystemInfop, char *old_name, char *new_name, FAT_DS_BLOCK4K fat_ds);
+int rename_lfn(FileSystemInfop fileSystemInfop, char *old_name, char *new_name, FAT_DS_BLOCK4K fat_ds);
 
 #endif //__FS__
