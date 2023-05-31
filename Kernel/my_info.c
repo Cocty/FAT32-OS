@@ -36,17 +36,30 @@ item       要显示的信息\n\
         {
             return WRONG_PARANUM;
         }
+        FAT fat1;
+        FAT fat2;
         for (int i = 0; i < len; i++)
         {
-            do_read_block(fileSystemInfop->fp, (BLOCK *)&fat, (fileSystemInfop->FAT[0] + i) / 8, (fileSystemInfop->FAT[0] + i) % 8);
-            int j;
-            for (j = 0; j < BLOCKSIZE / 4; j++) //遍历FAT一个扇区的每个表项
+            memset(&fat1, 0, sizeof(fat1));
+            memset(&fat2, 0, sizeof(fat2));
+            DEBUG("读取fat表1\n");
+            do_read_block(fileSystemInfop->fp, (BLOCK *)&fat1, (fileSystemInfop->FAT[0] + i) / 8, (fileSystemInfop->FAT[0] + i) % 8);
+            DEBUG("读取fat表2\n");
+            do_read_block(fileSystemInfop->fp, (BLOCK *)&fat2, (fileSystemInfop->FAT[1] + i) / 8, (fileSystemInfop->FAT[1] + i) % 8);
+            DEBUG("fat表如下（左边是fat1，右边是fat2）:\n");
+            for (int j = 0; j < BLOCKSIZE / 4; j += 4) //遍历FAT一个扇区的每个表项
             {
-                printf("%08x ", BigtoLittle32(fat.fat[j]));
-                if ((j + 1) % 4 == 0)
+                for (int k = 0; k < 4; k++) //打印FAT1表项
                 {
-                    printf("\n");
+                    printf("%08x ", BigtoLittle32(fat1.fat[j + k]));
                 }
+
+                printf("  ");               //空两个空格分隔FAT1和FAT2表
+                for (int k = 0; k < 4; k++) //打印FAT2表项
+                {
+                    printf("%08x ", BigtoLittle32(fat2.fat[j + k]));
+                }
+                printf("\n");
             }
         }
     }
@@ -75,5 +88,65 @@ item       要显示的信息\n\
         printf("该分区的总簇数为%10d\n", all_clus);
         printf("该分区的剩余簇数为%10d\n", rest_clus);
         printf("空间占用率为%.2f\n", (float)(all_sec - rest_sec) / all_sec);
+    }
+    else if (strcmp(arg->argv[0], "DBR") == 0) //显示DBR的数据
+    {
+        BLOCK block;
+        DEBUG("读取DBR的数据\n");
+        do_read_block(fileSystemInfop->fp, &block, fileSystemInfop->MBR_start / 8, fileSystemInfop->MBR_start % 8);
+        for (int i = 0; i < BLOCKSIZE; i++)
+        {
+            printf("%02x ", block.data[i]);
+            if ((i + 1) % 16 == 0)
+            {
+                printf("\n");
+            }
+        }
+    }
+    else if (strcmp(arg->argv[0], "dir") == 0) //读取根目录数据
+    {
+        BLOCK4K block4k;
+        u32 pathNum = fileSystemInfop->pathNum;
+        do
+        {
+            do_read_block4k(fileSystemInfop->fp, &block4k, L2R(fileSystemInfop, pathNum)); //读取当前簇
+            for (int i = 0; i < SPCSIZE; i += 16)
+            {
+                for (int k = 0; k < 16; k++)
+                {
+                    printf("%02x ", block4k.block->data[i + k]);
+                }
+                printf("   ");
+                for (int k = 0; k < 16; k++)
+                {
+                    printf("%c ", block4k.block->data[i + k]);
+                }
+                printf("\n");
+            }
+            pathNum = getNext(fileSystemInfop, pathNum); //取下一个簇
+        } while (pathNum != FAT_END);
+    }
+    else if (ctoi(arg->argv[0]) != INF)
+    { //显示指定逻辑簇号的内容
+        BLOCK4K block4k;
+        u32 pathNum = ctoi(arg->argv[0]);
+        do
+        {
+            do_read_block4k(fileSystemInfop->fp, &block4k, L2R(fileSystemInfop, pathNum)); //读取指定逻辑簇号
+            for (int i = 0; i < SPCSIZE; i += 16)
+            {
+                for (int k = 0; k < 16; k++)
+                {
+                    printf("%02x ", block4k.block->data[i + k]);
+                }
+                printf("   ");
+                for (int k = 0; k < 16; k++)
+                {
+                    printf("%c ", block4k.block->data[i + k]);
+                }
+                printf("\n");
+            }
+            pathNum = getNext(fileSystemInfop, pathNum); //取下一个簇
+        } while (pathNum != FAT_END);
     }
 }

@@ -76,7 +76,7 @@ typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
 
-// #define __DEBUG__
+#define __DEBUG__
 #ifdef __DEBUG__
 #define DEBUG printf
 #endif
@@ -149,7 +149,7 @@ typedef struct __FileSystemInfo
     u32 BPB_TotSec32;
     /* fat表所占扇区数 */
     u32 BPB_FATSz32;
-    /* 根本目录所在第一扇区数  逻辑*/
+    /* 根本目录所在的簇号  逻辑*/
     u32 BPB_RootClis;
     /* 保留区引导扇所占扇区数 通常为6 */
     u16 BPB_BkBootSec;
@@ -310,7 +310,7 @@ typedef struct __hd_ftr
 //块操纵员素
 typedef struct __BLOCK
 {
-    char data[512];
+    u8 data[512];
 } BLOCK;
 
 //4K块

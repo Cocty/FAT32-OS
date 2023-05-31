@@ -44,7 +44,8 @@ int do_read_block4k(FILE *fp, BLOCK4K *block4k, int offset)
     }
     else
     {
-        DEBUG("read4k 物理簇号%d 范围%x-%x\n", offset, offset * SPCSIZE, offset * SPCSIZE + sizeof(BLOCK4K));
+        DEBUG("读取一簇 物理簇号%d 范围0x%x-0x%x\n", offset, offset * SPCSIZE, offset * SPCSIZE + sizeof(BLOCK4K));
+
         fseek(fp, offset * SPCSIZE, SEEK_SET);
         ret = fread(block4k, sizeof(BLOCK4K), 1, fp);
     }
@@ -60,7 +61,7 @@ int do_read_block(FILE *fp, BLOCK *block, int offset, int num)
     }
     else
     {
-        DEBUG("read %x-%x\n", offset * SPCSIZE + num * BLOCKSIZE, offset * SPCSIZE + num * BLOCKSIZE + sizeof(BLOCK));
+        DEBUG("读取一个块 范围：0x%x-0x%x\n", offset * SPCSIZE + num * BLOCKSIZE, offset * SPCSIZE + num * BLOCKSIZE + sizeof(BLOCK));
         fseek(fp, offset * SPCSIZE + num * BLOCKSIZE, SEEK_SET);
         ret = fread(block, sizeof(BLOCK), 1, fp);
     }
@@ -115,7 +116,7 @@ int newfree(FileSystemInfop fsip, u32 num)
                 BLOCK4K block4k;
                 memset(&block4k, 0, SPCSIZE); //当num为0时，只分配不连接
                 do_write_block4k(fsip->fp, &block4k, L2R(fsip, i * (512 / 4) + j));
-                DEBUG("new link %d->%d %d %d\n", num, i * (512 / 4) + j, i, j);
+                DEBUG("簇链 %d->%d %d %d\n", num, i * (512 / 4) + j, i, j);
                 return i * (512 / 4) + j;
             }
         }
