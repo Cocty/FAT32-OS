@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 /* 存在随机根目录dir乱码 原因不明 */
 /*
     接受一个参数 不得小于256MB 不得大于2097152MB(2TB)
@@ -122,14 +122,13 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
         return WRONG_PARANUM;
     }
 
-    DEBUG("%s %d", arg->argv[0], ctoi(arg->argv[0]));
     int size = ctoi(arg->argv[0]);
     if (size < MIN || size > MAX)
     {
         return WRONG_CAPACITY;
     }
     int cut = size * K * K / SPCSIZE;
-    DEBUG("%d %d\n", sizeof(BLOCK), sizeof(BLOCK4K));
+    DEBUG("块大小%dB 簇大小%dB\n", sizeof(BLOCK), sizeof(BLOCK4K));
     fp = fopen(fileName, "wb");
     if (fp == NULL)
     {
@@ -173,7 +172,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
 
     // 初始化根目录
     int start = bs_pbp.BPB_FATSz32 * bs_pbp.BPB_NumFATs + bs_pbp.BPB_RsvdSecCnt + mbr.mbr_in[0].strart_chan + (bs_pbp.BPB_RootClis - 2) * bs_pbp.BPB_SecPerClus;
-    DEBUG("开始扇区 %d\n", start);
+    DEBUG("文件系统开始开始扇区 %d\n", start);
 
     offset = start / 8;
     num = start % 8;
@@ -198,7 +197,7 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     const int str_fat1 = bs_pbp.BPB_RsvdSecCnt + mbr.mbr_in[0].strart_chan;
     const int str_fat2 = bs_pbp.BPB_RsvdSecCnt + bs_pbp.BPB_FATSz32 + mbr.mbr_in[0].strart_chan;
     const int str_fat_array[] = {str_fat1, str_fat2};
-    DEBUG("%d %d\n", str_fat1, str_fat2);
+    DEBUG("fat表1的起始扇区%d fat表2的起始扇区%d\n", str_fat1, str_fat2);
 
     for (int k = 0; k < 2; k++)
     {

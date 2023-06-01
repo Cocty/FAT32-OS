@@ -7,9 +7,10 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${fileDirname}\\*.c",
+                "D:\\OS design\\FAT32-OS\\*.c",
+                "D:\\OS design\\FAT32-OS\\Kernel\\*.c",
                 "-o",
-                "${fileDirname}\\main.exe",
+                "D:\\OS design\\FAT32-OS\\main.exe",
                 "-fexec-charset=GBK"
             ],
             "options": {

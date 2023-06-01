@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 
 int isEmpty(FileSystemInfop fileSystemInfop, u32 pathNum)
 {

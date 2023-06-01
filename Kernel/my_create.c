@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 
 int my_create(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 {
@@ -49,6 +49,7 @@ name       创建文件的名字\n";
 int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_ds)
 {
     u32 pathNum = fileSystemInfop->pathNum;
+    DEBUG("当前目录的逻辑簇号%d\n", pathNum);
     u32 cut;
     while (TRUE)
     {
@@ -73,6 +74,7 @@ int create_sfn(FileSystemInfop fileSystemInfop, char name[], FAT_DS_BLOCK4K fat_
         {
             u32 lin = pathNum;
             pathNum = getNext(fileSystemInfop, pathNum);
+            DEBUG("文件分配的新簇号为%d\n", pathNum);
             if (pathNum == FAT_END)
             {
                 //全都没有分配一个

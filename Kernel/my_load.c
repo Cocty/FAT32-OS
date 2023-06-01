@@ -3,8 +3,8 @@
     返回必要参数
     接受 虚拟磁盘名称
 */
-#include "fs.h"
-#include "tool.h"
+#include "../fs.h"
+#include "../tool.h"
 #include <string.h>
 //打开文件但未关闭
 int my_load(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
@@ -40,10 +40,12 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     strcpy(fileSystemInfop->path, "/");
 
     //MBR部分
+    DEBUG("读取MBR部分数据\n");
     do_read_block(fp, (BLOCK *)&mbr, 0, 0);
     fileSystemInfop->MBR_size = mbr.mbr_in[0].all;
     fileSystemInfop->MBR_start = mbr.mbr_in[0].strart_chan;
 
+    DEBUG("读取DBR的数据\n");
     do_read_block(fp, (BLOCK *)&bpb, fileSystemInfop->MBR_start / 8, fileSystemInfop->MBR_start % 8);
     fileSystemInfop->BPB_BytsPerSec = bpb.BPB_BytsPerSec;
     fileSystemInfop->BPB_SecPerClus = bpb.BPB_SecPerClus;
@@ -55,7 +57,6 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     fileSystemInfop->BPB_RootClis = bpb.BPB_RootClis;
     fileSystemInfop->BPB_BkBootSec = bpb.BPB_BkBootSec;
 
-    // bs_pbp.BPB_FATSz32*bs_pbp.BPB_NumFATs+bs_pbp.BPB_RsvdSecCnt+mbr.mbr_in[0].strart_chan+(bs_pbp.BPB_RootClis-2)*bs_pbp.BPB_SecPerClus;
     fileSystemInfop->rootNum = fileSystemInfop->MBR_start +
                                fileSystemInfop->BPB_RsvdSecCnt +
                                fileSystemInfop->BPB_FATSz32 * fileSystemInfop->BPB_NumFATs +
@@ -80,7 +81,8 @@ namefile    虚拟磁盘文件路径（当前目录下开始） 默认 fs.vhd\n"
     }
 
     DEBUG("%s 加载成功!\n", fileSystemInfop->fileName);
-    DEBUG("根目录簇号 %d\n", fileSystemInfop->rootNum);
-    DEBUG("FAT表位置（簇号） %d %d\n", fileSystemInfop->FAT[0], fileSystemInfop->FAT[1]);
+    DEBUG("根目录物理扇区号 %d\n", fileSystemInfop->rootNum);
+    DEBUG("根目录的逻辑簇号为 %d\n", fileSystemInfop->pathNum);
+    DEBUG("FAT表位置的物理扇区号 (fat1)%d (fat2)%d\n", fileSystemInfop->FAT[0], fileSystemInfop->FAT[1]);
     return SUC;
 }
