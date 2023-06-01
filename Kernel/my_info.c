@@ -119,7 +119,7 @@ item       要显示的信息\n\
                 printf("   ");
                 for (int k = 0; k < 16; k++)
                 {
-                    printf("%c ", block4k.block->data[i + k]);
+                    printf("%c", block4k.block->data[i + k]);
                 }
                 printf("\n");
             }
@@ -142,7 +142,7 @@ item       要显示的信息\n\
                 printf("   ");
                 for (int k = 0; k < 16; k++)
                 {
-                    printf("%c ", block4k.block->data[i + k]);
+                    printf("%c", block4k.block->data[i + k]);
                 }
                 printf("\n");
             }
