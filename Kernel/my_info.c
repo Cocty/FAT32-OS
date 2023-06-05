@@ -130,23 +130,22 @@ item       要显示的信息\n\
     { //显示指定逻辑簇号的内容
         BLOCK4K block4k;
         u32 pathNum = ctoi(arg->argv[0]);
-        do
+        do_read_block4k(fileSystemInfop->fp, &block4k, L2R(fileSystemInfop, pathNum)); //读取指定逻辑簇号
+        for (int i = 0; i < SPCSIZE; i += 16)
         {
-            do_read_block4k(fileSystemInfop->fp, &block4k, L2R(fileSystemInfop, pathNum)); //读取指定逻辑簇号
-            for (int i = 0; i < SPCSIZE; i += 16)
+            for (int k = 0; k < 16; k++)
             {
-                for (int k = 0; k < 16; k++)
-                {
-                    printf("%02x ", block4k.block->data[i + k]);
-                }
-                printf("   ");
-                for (int k = 0; k < 16; k++)
+                printf("%02x ", block4k.block->data[i + k]);
+            }
+            printf("   ");
+            for (int k = 0; k < 16; k++)
+            {
+                if (block4k.block->data[i + k] != '\n')
                 {
                     printf("%c", block4k.block->data[i + k]);
                 }
-                printf("\n");
             }
-            pathNum = getNext(fileSystemInfop, pathNum); //取下一个簇
-        } while (pathNum != FAT_END);
+            printf("\n");
+        }
     }
 }
