@@ -9,7 +9,7 @@ int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 item       要显示的信息\n\
 备注       如果item为fat，则显示fat表的占用情况，默认读取一个扇区\n\
             如果item为detail,则显示当前已占用多少簇，剩余有多少簇\n\
-            默认显示空间使用情况";
+            默认显示空间使用情况\n";
     char item[ARGLEN];
     FAT fat;
     const int str_fat1 = fileSystemInfop->BPB_RsvdSecCnt + fileSystemInfop->MBR_start; //Fat表1起始扇区数
