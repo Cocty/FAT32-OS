@@ -7,8 +7,10 @@ int my_info(const ARGP arg, FileSystemInfop fileSystemInfop, char **helpstr)
 功能        显示文件系统信息\n\
 语法格式    info item offset\n\
 item       要显示的信息\n\
-备注       如果item为fat，则显示fat表的占用情况，默认读取一个扇区\n\
+备注       如果item为fat，则显示fat表的占用情况，offset为显示多少扇区的fat表，默认读取一个扇区\n\
             如果item为detail,则显示当前已占用多少簇，剩余有多少簇\n\
+            如果item为dir,则显示根目录的内容，\n\
+            如果item为数字,则显示指定簇号的内容，\n\
             默认显示空间使用情况\n";
     char item[ARGLEN];
     FAT fat;
