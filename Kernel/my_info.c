@@ -17,6 +17,10 @@ item       要显示的信息\n\
     {
         return NONE_FILESYS;
     }
+    if (strcmp(arg->argv[0], "/?") == 0)
+    {
+        return HELP_STR;
+    }
     if (strcmp(arg->argv[0], "fat") == 0)
     {
         int len;
