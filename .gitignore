@@ -1,4 +1,5 @@
-/fs.vhd
+fs.vhd
 *.exe
 .VSCodeCounter
-/Kernel/libFat32.lib
+Kernel/libFat32.lib
+Kernel/*.o
